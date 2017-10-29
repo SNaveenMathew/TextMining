@@ -32,9 +32,9 @@ def apply_bigram_trigram_model(unigrams):
     trigram = Phraser(trigram)
     return(list(trigram[bigram[unigrams]]))
 
-def run_lda_topic_model(text):
-    corpus = TextCorpus('sample_cleaned.txt')
-    text = open('sample_cleaned.txt', 'r').read()
+def run_lda_topic_model(text_file):
+    corpus = TextCorpus(text_file)
+    text = open(text_file, 'r').read()
     text = text.split("\n")
     text = Series(text)
     text = text.apply(tokenize_treetagger)
@@ -47,5 +47,5 @@ def run_lda_topic_model(text):
 
 def build_logistic_regression(df, outcome):
     model = LogisticRegression(penalty = 'l1')
-    model.fit(X = df.drop(outcome, axis=1), y = model[outcome])
+    model.fit(X = df.drop(outcome, axis=1), y = df[outcome])
     return(model)

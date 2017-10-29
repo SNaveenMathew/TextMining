@@ -48,9 +48,9 @@ def run_treetagger(text):
 #    doc = nlp(text.lower())
 #    return(doc)
 #
-def read_file(file, in_type = "csv", col = "text"):
+def read_file(file, in_type = "csv"):
     if(in_type == "csv"):
-        return(read_csv(file)[col])
+        return(read_csv(file, encoding = "latin1"))
     else:
         text = open(file, 'r').read()
         return(text)
