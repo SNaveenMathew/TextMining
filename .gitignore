@@ -3,3 +3,4 @@ NLP/*
 *.w2v
 *.txt
 *.w2v.bin
+__pycache__/*
