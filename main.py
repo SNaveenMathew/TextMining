@@ -77,5 +77,5 @@ out_file.close()
 
 # Run word2vec model and store word representations
 model = run_word2vec_model("sample.txt")
-
+model.wv.save_word2vec_format("big.w2v")
 visualize_word2vec_model(model)

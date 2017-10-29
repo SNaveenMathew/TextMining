@@ -22,7 +22,7 @@ from sklearn.linear_model import LogisticRegression
 def run_word2vec_model(text_file):
     sentences = LineSentence(text_file)
     model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
-    model.save("sample_model.w2v.bin")
+#    model.save("sample_model.w2v.bin")
     return(model)
 
 def apply_bigram_trigram_model(unigrams):

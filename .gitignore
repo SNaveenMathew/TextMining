@@ -1,1 +1,5 @@
 NLP/*
+
+*.w2v
+big.txt
+*.w2v.bin
