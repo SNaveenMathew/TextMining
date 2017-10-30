@@ -49,7 +49,7 @@ def run_treetagger(text):
 #    return(doc)
 #
 def read_file(file, in_type = "csv"):
-    if(in_type == "csv"):
+    if(in_type.lower() == "csv"):
         return(read_csv(file, encoding = "latin1"))
     else:
         text = open(file, 'r').read()
