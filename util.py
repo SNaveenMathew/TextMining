@@ -8,7 +8,7 @@ Created on Thu Oct 12 12:33:25 2017
 from treetaggerwrapper import TreeTagger, make_tags
 #from en_core_web_md import load
 from os import environ
-from pandas import read_csv, DataFrame
+from pandas import read_csv, DataFrame, read_excel
 from itertools import chain
 from re import sub
 from autocorrect import spell
@@ -51,6 +51,8 @@ def run_treetagger(text):
 def read_file(file, in_type = "csv"):
     if(in_type.lower() == "csv"):
         return(read_csv(file, encoding = "latin1"))
+    elif(in_type.lower() == "excel"):
+        return(read_excel(file, encoding = "latin1"))
     else:
         text = open(file, 'r').read()
         return(text)

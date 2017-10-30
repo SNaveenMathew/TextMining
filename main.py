@@ -42,7 +42,8 @@ if(in_type == "text"):
     strings = tokenize_sentence_nltk(strings)
     strings = DataFrame(strings)[0]
 else:
-    labels = strings[label]
+    if(label in strings.columns):
+        labels = strings[label]
     strings = strings[col]
 
 strings = strings.apply(clean_strings)
