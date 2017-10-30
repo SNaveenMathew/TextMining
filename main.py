@@ -116,7 +116,7 @@ df[label] = labels
 
 # 10) Building and saving the logistic regression model with L1 penalty
 lr_model = build_logistic_regression(df, label)
-dump(lr_model, "logistic_model.pkl")
+dump(lr_model, open("logistic_model.pkl", 'wb'))
 
 # 11) Topic modeling (Optional)
 lda_model = run_lda_topic_model(text_file = "sample_cleaned.txt")

@@ -1,6 +1,9 @@
 NLP/*
-
+.ipynb_checkpoints/*
 *.w2v
 *.txt
 *.w2v.bin
 __pycache__/*
+metastore_db/*
+*.pkl
+*.log
