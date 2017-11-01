@@ -9,8 +9,8 @@ Created on Thu Oct 12 09:52:31 2017
 from util import run_treetagger, flatten_list_of_list, process_NotTag
 from lemmatization import lemmatize_treetagger
 from nltk.tokenize import sent_tokenize
-#from os import environ
 import treetaggerwrapper
+from pyspark.ml.feature import Tokenizer
 
 # Initialization
 # Classpath is required to initialize Stanford POS Tagger
@@ -56,3 +56,11 @@ def tokenize_sentence_nltk(text, get_lemma = False):
     text = [sent.split("(.[A-Z])") for sent in text]
     text = flatten_list_of_list(text)
     return(text)
+
+def tokenize_spark(sentenceDataFrame, in_column, out_column = None):
+    if(out_column is not None):
+        tokenizer = Tokenizer(inputCol = in_column, outputCol = out_column)
+    else:
+        tokenizer = Tokenizer(inputCol = in_column, outputCol = in_column)
+    tokenized = tokenizer.transform(sentenceDataFrame)
+    return(tokenized)

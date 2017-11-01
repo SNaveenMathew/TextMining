@@ -14,6 +14,7 @@ from tokenization import tokenize_treetagger
 from util import remove_stopwords, remove_punctuations
 from pandas import Series
 from sklearn.linear_model import LogisticRegression
+from pyspark.ml.feature import Word2Vec as w2v
 
 # Models:
 # 1) Run word2vec on input text file
@@ -49,3 +50,14 @@ def build_logistic_regression(df, outcome):
     model = LogisticRegression(penalty = 'l1')
     model.fit(X = df.drop(outcome, axis=1), y = df[outcome])
     return(model)
+
+def run_word2vec_model_pyspark(documentDF, tokens, out_col = None):
+    if(out_col is not None):
+        model = w2v(vectorSize=3, minCount=0, inputCol="text", outputCol="result")
+    else:
+        model = w2v(vectorSize=3, minCount=0, inputCol="text")
+    result = model.fit(documentDF)
+    for row in result.collect():
+        text, vector = row
+        print("Text: [%s] => \nVector: %s\n" % (", ".join(text), str(vector)))
+    return(result)

@@ -17,6 +17,7 @@ import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation
+from pyspark.ml.feature import StopWordsRemover
 
 # Initializating global variables
 # Initialization for:
@@ -165,3 +166,11 @@ def remove_stopwords(tokens):
 def remove_punctuations(tokens):
     tokens = [token for token in tokens if token not in puncts]
     return(tokens)
+
+def remove_stopwords_spark(tokenized, in_column, out_column = None):
+    if(out_column is not None):
+        remover = StopWordsRemover(inputCol = in_column, outputCol = out_column)
+    else:
+        remover = StopWordsRemover(inputCol = in_column)
+    stopwords_removed = remover.transform(tokenized)
+    return(stopwords_removed)
