@@ -7,7 +7,8 @@ Created on Mon Oct 30 17:22:02 2017
 
 from util import read_file#, flatten_list_of_list#, clean_sentences
 from util import pick_first_language, is_english_wp_p#, spell_correct_tokens
-from util import detect_language, remove_stopwords_spark#, clean_strings
+from util import detect_language#, clean_strings
+from util_spark import remove_stopwords_spark
 from tokenization import tokenize_sentence_nltk, tokenize_spark
 from modeling import run_word2vec_model_pyspark
 from langdetect import DetectorFactory
