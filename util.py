@@ -18,6 +18,7 @@ from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation
 from pyspark.ml.feature import StopWordsRemover
+from spellcheck import SpellCheck
 
 # Initializating global variables
 # Initialization for:
@@ -29,6 +30,7 @@ tagger = TreeTagger(TAGLANG = 'en')
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 english_stopwords = set(stopwords.words('english'))
 puncts = set(punctuation)
+spell_check = SpellCheck('/usr/share/dict/words')
 # Commenting spaCy to reduce initialization overhead
 #nlp = load()
 
@@ -103,7 +105,9 @@ def check_spell(row):
     if(len(row[0])==1 or row[1] in [")", "(", "''", "PP$", ",", ":", '``']):
         return(row[0])
     else:
-        return(spell(row[0]))
+        #ret = spell(row[0])
+        ret = spell_check.correct(row[0])
+        return(ret)
 
 def is_in_words(word):
     return(word in NLP_WORDS)
