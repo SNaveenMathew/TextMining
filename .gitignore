@@ -8,3 +8,4 @@ metastore_db/*
 *.pkl
 *.log
 spark-warehouse/*
+*.cfg
