@@ -22,8 +22,8 @@ class SpellCheck:
 
 	# Returning the words in a list as lower case and defining a word as a list of alphabetic character
 	# Works because the singular version of a word is more probably than the possessive notation (dog, dog's)
-	def words(self, text): 
-		return re.findall('[a-z]+', text.lower()) 
+	def words(self, text):
+		return re.findall('[a-z]+', text.lower())
 
 	#Returning dictionary = {'a':{abbey:1, abbreviated:2}, 'b':{},...,'z':{}}
 	#Instead of iterating through the whole dictionary, iteration happens based on first letter
@@ -50,7 +50,7 @@ class SpellCheck:
 		return set(e2 for e1 in self.edits1(word) for e2 in self.edits1(e1) if e2 in wDict)
 
 	#A known word is most likely to be a word that has a vowel mistyped rather than 2 consonants, probable correct first letter, edit distances of around 1 or 2
-	def known(self, word, wDict): 
+	def known(self, word, wDict):
 		return set(w for w in word if w in wDict)
 
 	# Highest Level Method
@@ -59,7 +59,7 @@ class SpellCheck:
 		candidates = self.known([word], wDict[word[0]]) or self.known(self.edits1(word), wDict[word[0]]) or self.known_edits2(word, wDict[word[0]]) or [word] # gets a set of words with the shortest edit distance from the typed word.
 		return max(candidates, key=wDict.get) # returning the element of the set with the highest probability of being the correct word
 
-	
+
 
 	def run(self, option):
 		lWords = self.words(file(self.dictPath).read())
@@ -72,24 +72,24 @@ class SpellCheck:
 						continue
 					spellchk = self.correct(word.lower(), lWords)
 					if spellchk == word and spellchk not in lWords[word[0]]:
-						print 'NO SUGGESTION'
+						print('NO SUGGESTION')
 					else:
-						print spellchk
-					print #'\n'
+						print(spellchk)
+					print('\n')
 			elif option == '1':
 				misspell = Misspell(lWords)
 				lWords = self.train(lWords)
 				while True:
 					word = misspell.genWord()
-					print 'Incorrect -', word
+					print('Incorrect -', word)
 					spellchk = self.correct(word, lWords)
 					if spellchk == word and spellchk not in lWords[word[0]]:
-						print 'NO SUGGESTION'
+						print('NO SUGGESTION')
 					else:
-						print 'Correct   -',spellchk
-					print #'\n'
+						print('Correct   -',spellchk)
+					print('\n')
 					raw_input('<enter>\n') #Enter to continue
-		except KeyboardInterrupt: 
+		except KeyboardInterrupt:
 			#Cleaner way to exit program without a crash
 			'exit'
 		except EOFError:

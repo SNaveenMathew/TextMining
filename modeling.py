@@ -22,7 +22,9 @@ from pyspark.ml.feature import Word2Vec as w2v
 
 def run_word2vec_model(text_file):
     sentences = LineSentence(text_file)
-    model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+    model = Word2Vec(size=100, window=5, min_count=5, workers=4)
+    model.build_vocab(sentences)
+    model.train(sentences, total_examples = model.corpus_count, epochs = 20)
 #    model.save("sample_model.w2v.bin")
     return(model)
 
