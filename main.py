@@ -9,8 +9,8 @@ Created on Sun Oct  8 18:28:47 2017
 from langdetect import DetectorFactory
 from pandas import Series, DataFrame
 from string import punctuation
-from numpy import zeros
-from pickle import dump
+#from numpy import zeros
+#from pickle import dump
 #from os import chdir
 
 # Loading custom defined functions
@@ -21,9 +21,9 @@ from util import read_file, flatten_list_of_list#, clean_sentences
 from util import pick_first_language, is_english_wp_p, spell_correct_tokens
 from util import detect_language, clean_strings
 from pos_tagging import run_treetagger_pos_tag_text
-from modeling import run_word2vec_model, apply_bigram_trigram_model
-from modeling import run_lda_topic_model, build_logistic_regression
-from visualizing import visualize_word2vec_model
+from modeling import apply_bigram_trigram_model
+#from modeling import run_word2vec_model, run_lda_topic_model, build_logistic_regression
+#from visualizing import visualize_word2vec_model
 
 # Current spell corrector is based on spell function in autocorrect package
 # WORDS = Counter(tokenize_stanford(open('big.txt').read()))
@@ -41,6 +41,10 @@ strings = read_file(in_file, in_type = in_type)
 if(in_type == "text"):
     strings = tokenize_sentence_nltk(strings)
     strings = DataFrame(strings)[0]
+elif(in_type == "html"):
+    meta_data = strings[1]
+    strings = strings[0]
+    strings[label] = meta_data["Comment"]
 else:
     if(label in strings.columns):
         labels = strings[label]
@@ -93,32 +97,32 @@ for sent in sentences1:
 out_file.close()
 
 # 7) Run word2vec model and store word representations
-model = run_word2vec_model("sample.txt")
-model.wv.save_word2vec_format("big.w2v")
+#model = run_word2vec_model("sample.txt")
+#model.wv.save_word2vec_format("big.w2v")
 
 # 8) Visualizing the word2vec model
-visualize_word2vec_model(model)
+#visualize_word2vec_model(model)
 
 # 9) Setting up the data for building logistic regression model
-df = zeros((len(sentences1), 100))
-for i, words in enumerate(trigrams):
-    for word in words:
-        try:
-            df[i] = df[i] + model[word]
-        except:
-            continue
+#df = zeros((len(sentences1), 100))
+#for i, words in enumerate(trigrams):
+#    for word in words:
+#        try:
+#            df[i] = df[i] + model[word]
+#        except:
+#            continue
 
-while(i<len(sentences1)):
-    i += 1
-
-df = DataFrame(df)
-df[label] = labels
+#while(i<len(sentences1)):
+#    i += 1
+#
+#df = DataFrame(df)
+#df[label] = labels
 
 # 10) Building and saving the logistic regression model with L1 penalty
-lr_model = build_logistic_regression(df, label)
-dump(lr_model, open("logistic_model.pkl", 'wb'))
+#lr_model = build_logistic_regression(df, label)
+#dump(lr_model, open("logistic_model.pkl", 'wb'))
 
 # 11) Topic modeling (Optional)
-lda_model = run_lda_topic_model(text_file = "sample_cleaned.txt")
+#lda_model = run_lda_topic_model(text_file = "sample_cleaned.txt")
 # Sample topic modeling output - Topic 1
-lda_model.print_topic(1)
+#lda_model.print_topic(1)

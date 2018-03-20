@@ -8,16 +8,11 @@ Created on Thu Oct 12 12:33:25 2017
 from treetaggerwrapper import TreeTagger, make_tags
 #from en_core_web_md import load
 from os import environ
-from pandas import read_csv, DataFrame, read_excel
-from itertools import chain
-from re import sub
-from autocorrect import spell
-from langdetect import detect_langs
+from pandas import DataFrame
 import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation
-from spellcheck import SpellCheck
 
 # Initializating global variables
 # Initialization for:
@@ -29,7 +24,6 @@ tagger = TreeTagger(TAGLANG = 'en')
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 english_stopwords = set(stopwords.words('english'))
 puncts = set(punctuation)
-spell_check = SpellCheck('/usr/share/dict/words')
 # Commenting spaCy to reduce initialization overhead
 #nlp = load()
 
@@ -52,20 +46,41 @@ def run_treetagger(text):
 #
 def read_file(file, in_type = "csv"):
     if(in_type.lower() == "csv"):
+        from pandas import read_csv
         return(read_csv(file, encoding = "latin1"))
     elif(in_type.lower() == "excel"):
+        from pandas import read_excel
         return(read_excel(file, encoding = "latin1"))
+    elif(in_type.lower() == "html"):
+        from pandas import read_html, concat
+        df = read_html(file)
+        if(type(df) == list):
+            length = len(df)-1
+            meta_data = df[0:length]
+            meta_data[1] = meta_data[1].T
+            meta_data[2] = meta_data[2].T
+            meta_data[4] = meta_data[4].drop(2, axis=1)
+            meta_data = concat(meta_data, axis = 0, ignore_index = True)
+            meta_data1 = meta_data[1]
+            meta_data1.index = meta_data[0]
+            df = df[length]
+            df.columns = df.iloc[0].tolist()
+            df = df.drop(0, axis=0)
+            df = df.reset_index(drop=True)
+        return([df, meta_data1])
     else:
         text = open(file, 'r').read()
         return(text)
 
 def flatten_list_of_list(list_of_list):
+    from itertools import chain
     return(list(chain.from_iterable(list_of_list)))
 
 def clean_sentences(sentences):
     return([clean_strings(string) for string in sentences])
 
 def clean_strings(string):
+    from re import sub
     return(sub(pattern = "^(nan )*", repl = "", string = string))
 
 def pick_first_language(langs):
@@ -101,6 +116,8 @@ def lower(text):
     return(text.lower())
 
 def check_spell(row):
+    from spellcheck import SpellCheck
+    spell_check = SpellCheck('/usr/share/dict/words')
     if(len(row[0])==1 or row[1] in [")", "(", "''", "PP$", ",", ":", '``']):
         return(row[0])
     else:
@@ -114,6 +131,7 @@ def is_in_words(word):
 # This is yet to  be developed fully. It currently returns the tokens as they are
 def spell_correct_tokens(pos):
     # This only merges 2 consecutive words & checks if they are both incorrectly spelled
+    from autocorrect import spell
     try:
         tokens = pos[pos[1]!="SENT"]
         updated_tokens = tokens.apply(check_spell, axis = 1).apply(lower)
@@ -157,6 +175,7 @@ def process_NotTag(not_tag):
     return(text[1])
 
 def detect_language(text):
+    from langdetect import detect_langs
     try:
         return(detect_langs(text))
     except:
