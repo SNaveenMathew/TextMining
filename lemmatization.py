@@ -5,6 +5,7 @@ Created on Thu Oct 12 09:56:27 2017
 @author: naveen.nathan
 """
 
+import treetaggerwrapper
 #from nltk.stem import WordNetLemmatizer
 
 # Initializing
@@ -18,11 +19,17 @@ Created on Thu Oct 12 09:56:27 2017
 
 def lemmatize_treetagger(tag):
     length = len(tag)
-    if length>1:
+    if length>1 and type(tag)==treetaggerwrapper.Tag:
         if tag[length-1]!="@card@":
             return tag[length-1]
         else:
             return tag[0]
+    elif type(tag)==list:
+        lemma = []
+        for t in tag:
+            lemma = lemma + [lemmatize_treetagger(t)]
+        lemma = " ".join(lemma)
+        return lemma
     else:
         return tag
 

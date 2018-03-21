@@ -6,6 +6,7 @@ Created on Thu Oct 12 12:33:25 2017
 """
 
 from treetaggerwrapper import TreeTagger, make_tags
+from math import isnan
 #from en_core_web_md import load
 from os import environ
 from pandas import DataFrame
@@ -44,7 +45,7 @@ def run_treetagger(text):
 #    doc = nlp(text.lower())
 #    return(doc)
 #
-def read_file(file, in_type = "csv"):
+def read_file(file, in_type = "csv", message_col = "Message"):
     if(in_type.lower() == "csv"):
         from pandas import read_csv
         return(read_csv(file, encoding = "latin1"))
@@ -59,18 +60,52 @@ def read_file(file, in_type = "csv"):
             meta_data = df[0:length]
             meta_data[1] = meta_data[1].T
             meta_data[2] = meta_data[2].T
-            meta_data[4] = meta_data[4].drop(2, axis=1)
+            meta_data = meta_data[:-3] + meta_data[-2:]
             meta_data = concat(meta_data, axis = 0, ignore_index = True)
+            timestamp = meta_data[2]
+            timestamp = timestamp[timestamp.apply(is_not_nan)].tolist()[0]
             meta_data1 = meta_data[1]
             meta_data1.index = meta_data[0]
+            participants = str(meta_data1["From"]) + str(meta_data1["To"]) + str(meta_data1["Cc"])
+            sender = str(meta_data1["From"])
+            recipients = []
+            if is_not_nan(meta_data1["To"]):
+                recipients = recipients + str(meta_data1["To"]).split(";")
+            if is_not_nan(meta_data1["Cc"]):
+                recipients = recipients + str(meta_data1["Cc"].split(";"))
             df = df[length]
             df.columns = df.iloc[0].tolist()
             df = df.drop(0, axis=0)
             df = df.reset_index(drop=True)
-        return([df, meta_data1])
+            languages = df[message_col].apply(detect_language)
+            first_language = languages.apply(pick_first_language)
+            english_only = first_language.apply(is_english_wp_p)
+            total_english = english_only.sum()
+            language = "en"
+            if total_english <= 2:
+                language = first_language.apply(lambda x: x.lang).value_counts()
+                language = language.index[0]
+        conversation_length = df.shape[0]
+        df = DataFrame([df, participants, timestamp, language, sender, recipients, conversation_length]).T
+        df.Columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
+        return df
     else:
         text = open(file, 'r').read()
         return(text)
+
+def read_folder(folder, in_type = "html"):
+    from os import listdir
+    from os.path import join, isfile
+    from pandas import concat
+    files = listdir(folder)
+    df = []
+    for file in files:
+        file = join(folder, file)
+        if in_type == "html" and isfile(file):
+            df.append(read_file(file, in_type))
+    df = concat(df, axis = 0, ignore_index = False)
+    return df
+
 
 def flatten_list_of_list(list_of_list):
     from itertools import chain
@@ -162,6 +197,12 @@ def spell_correct_tokens(pos):
 
 def is_not_none(row):
     return(row!=None)
+
+def is_not_nan(num):
+    try:
+        return(not(isnan(num)))
+    except:
+        return(True)
 
 #def spell_correct_pos(pos):
 #    try:
