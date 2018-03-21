@@ -87,7 +87,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
                 language = language.index[0]
         conversation_length = df.shape[0]
         df = DataFrame([df, participants, timestamp, language, sender, recipients, conversation_length]).T
-        df.Columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
+        df.columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
         return df
     else:
         text = open(file, 'r').read()
@@ -229,3 +229,22 @@ def remove_stopwords(tokens):
 def remove_punctuations(tokens):
     tokens = [token for token in tokens if token not in puncts]
     return(tokens)
+
+
+def filter_data(data):
+    # Retaining only English
+    data = data[data['language'] == "en"]
+    data = data.reset_index()
+    # Deduplicating:
+    max_conv = DataFrame(data[['sender', 'timestamp', 'conversation_length']].groupby(['sender', 'timestamp']).max())
+    sender_timestamp = max_conv.index.tolist()
+    sender = [i[0] for i in sender_timestamp]
+    timestamp = [i[1] for i in sender_timestamp]
+    max_conv['sender'] = sender
+    max_conv['timestamp'] = timestamp
+    max_conv = max_conv.reset_index()
+    if 'index' in max_conv.columns:
+        max_conv = max_conv.drop(['index'], axis=1)
+    data = data.merge(max_conv, on = ['timestamp', 'sender', 'conversation_length'], how = 'inner')
+    return data
+
