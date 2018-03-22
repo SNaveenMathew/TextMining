@@ -65,15 +65,19 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             meta_data = concat(meta_data, axis = 0, ignore_index = True)
             timestamp = meta_data[2]
             timestamp = timestamp[timestamp.apply(is_not_nan)].tolist()[0]
+            timestamp = str(timestamp).lower()
             meta_data1 = meta_data[1]
             meta_data1.index = meta_data[0]
-            participants = str(meta_data1["From"]) + str(meta_data1["To"]) + str(meta_data1["Cc"])
-            sender = str(meta_data1["From"])
+            meta_data1['From'] = str(meta_data1['From']).lower()
+            meta_data1["To"] = str(meta_data1["To"]).lower()
+            meta_data1["Cc"] = str(meta_data1["Cc"]).lower()
+            participants = meta_data1["From"] + meta_data1["To"] + meta_data1["Cc"]
+            sender = meta_data1["From"]
             recipients = []
             if is_not_nan(meta_data1["To"]):
-                recipients = recipients + str(meta_data1["To"]).split(";")
+                recipients = recipients + meta_data1["To"].split(";")
             if is_not_nan(meta_data1["Cc"]):
-                recipients = recipients + str(meta_data1["Cc"]).split(";")
+                recipients = recipients + meta_data1["Cc"].split(";")
             df = df[length]
             df.columns = df.iloc[0].tolist()
             df = df.drop(0, axis=0)
