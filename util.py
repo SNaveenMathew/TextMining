@@ -249,12 +249,16 @@ def filter_data(data):
     data = data.merge(max_conv, on = ['timestamp', 'sender', 'conversation_length'], how = 'inner')
     return data
 
-def filter_senders(data):
+def filter_senders(data, sender_col = "sender"):
     # Filtering senders with names like "GG *"
-    results = data.sender.apply(findgg)
+    results = data[sender_col].apply(findgg)
     data = data[results == 0]
     return data
 
-
 def findgg(string):
     return len(findall("gg[\ ]*", string.lower()))
+
+def filter_recipients(data, recipients_col = "recipients"):
+    results = data[recipients_col].apply(len)
+    data = data[results <= 5]
+    return data

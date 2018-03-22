@@ -20,7 +20,7 @@ from tokenization import tokenize_sentence_nltk#, tokenize_treetagger
 from util import read_file, flatten_list_of_list, read_folder#, clean_sentences
 from util import pick_first_language, is_english_wp_p, spell_correct_tokens
 from util import detect_language, clean_strings, run_treetagger
-from util import filter_data
+from util import filter_data, filter_senders, filter_recipients
 from pos_tagging import run_treetagger_pos_tag_text
 from modeling import apply_bigram_trigram_model
 from lemmatization import lemmatize_treetagger
@@ -62,7 +62,7 @@ else:
 # Some deduplication to be done here to keep the remaining steps same
 strings = filter_data(strings)
 strings = filter_senders(strings)
-
+strings = filter_recipients(strings)
 
 strings = strings.apply(clean_strings)
 languages = strings.apply(detect_language)
