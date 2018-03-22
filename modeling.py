@@ -54,7 +54,7 @@ def build_logistic_regression(df, outcome):
     return model
 
 #def run_word2vec_model_pyspark(documentDF, tokens, out_col = None):
-#    if(out_col is not None):
+#    if out_col is not None:
 #        model = w2v(vectorSize=3, minCount=0, inputCol="text", outputCol="result")
 #    else:
 #        model = w2v(vectorSize=3, minCount=0, inputCol="text")

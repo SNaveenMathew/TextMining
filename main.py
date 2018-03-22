@@ -42,10 +42,10 @@ in_type = in_file[1]
 in_file = in_file[0]
 if file_folder == "file":
     strings = read_file(in_file, in_type = in_type)
-    if(in_type == "text"):
+    if in_type == "text":
         strings = tokenize_sentence_nltk(strings)
         strings = DataFrame(strings)[0]
-    elif(in_type == "html"):
+    elif in_type == "html":
         timestamp = strings[2]
         meta_data = strings[1]
         strings = strings[0]
@@ -53,7 +53,7 @@ if file_folder == "file":
         labels = strings[label]
         strings = strings[col]
     else:
-        if(label in strings.columns):
+        if label in strings.columns:
             labels = strings[label]
         strings = strings[col]
 else:

@@ -31,11 +31,11 @@ column = in_file[2]
 in_type = in_file[1]
 in_file = in_file[0]
 strings = read_file(in_file, in_type = in_type)
-if(in_type == "text"):
+if in_type == "text":
     strings = tokenize_sentence_nltk(strings)
     strings = Series(strings)
 else:
-    if(label in strings.columns):
+    if label in strings.columns:
         labels = strings[label]
 
 languages = strings[column].apply(detect_language)
@@ -46,7 +46,7 @@ first_language = languages.apply(pick_first_language)
 # Keeping only English text
 english_only = first_language.apply(is_english_wp_p)
 strings = strings[english_only]
-if(label in strings.columns):
+if label in strings.columns:
     labels = labels[english_only].tolist()
 sentenceDataFrame = spark.createDataFrame(strings)
 sentenceDataFrame.withColumn(column, regexp_replace(column, pattern = '^(nan )*',

@@ -33,7 +33,7 @@ from pyspark.ml.feature import Tokenizer
 #
 def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text)
-    if(get_lemma):
+    if get_lemma:
         s = [lemmatize_treetagger(tag) for tag in s]
         return s
     else:
@@ -58,7 +58,7 @@ def tokenize_sentence_nltk(text, get_lemma = False):
     return text
 
 def tokenize_spark(sentenceDataFrame, in_column, out_column = None):
-    if(out_column is not None):
+    if out_column is not None:
         tokenizer = Tokenizer(inputCol = in_column, outputCol = out_column)
     else:
         tokenizer = Tokenizer(inputCol = in_column, outputCol = in_column)

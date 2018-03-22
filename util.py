@@ -47,19 +47,19 @@ def run_treetagger(text):
 #    return doc
 #
 def read_file(file, in_type = "csv", message_col = "Message"):
-    if(in_type.lower() == "csv"):
+    if in_type.lower() == "csv":
         from pandas import read_csv
         return read_csv(file, encoding = "latin1")
-    elif(in_type.lower() == "excel"):
+    elif in_type.lower() == "excel":
         from pandas import read_excel
         return read_excel(file, encoding = "latin1")
-    elif(in_type.lower() == "html"):
+    elif in_type.lower() == "html":
         from pandas import read_html, concat
         try:
             df = read_html(file)
         except:
             df = []
-        if(type(df) == list and len(df) > 0):
+        if type(df) == list and len(df) > 0:
             length = len(df)-1
             meta_data = df[0:length]
             meta_data[1] = meta_data[1].T
@@ -141,7 +141,7 @@ def clean_strings(string):
     return sub(pattern = "^(nan )*", repl = "", string = string)
 
 def pick_first_language(langs):
-    if(langs!=None):
+    if langs!=None:
         return langs[0]
     else:
         return langdetect.language.Language(lang = "NA", prob = 0)
@@ -175,7 +175,7 @@ def lower(text):
 def check_spell(row):
     from spellcheck import SpellCheck
     spell_check = SpellCheck('/usr/share/dict/words')
-    if(len(row[0])==1 or row[1] in [")", "(", "''", "PP$", ",", ":", '``']):
+    if len(row[0])==1 or row[1] in [")", "(", "''", "PP$", ",", ":", '``']:
         return row[0]
     else:
         #ret = spell(row[0])
@@ -194,7 +194,7 @@ def spell_correct_tokens(pos):
         updated_tokens = tokens.apply(check_spell, axis = 1).apply(lower)
         same = updated_tokens != tokens[0]
         diff = DataFrame(same.index.values)[0][same]
-        if(len(diff)>0):
+        if len(diff)>0:
             wrong = diff.apply(diffs, args = (tokens, ))
             wrong_merge = wrong.apply(merge_words)
             wrong_corrected = wrong_merge.apply(spell).apply(lower)
@@ -204,13 +204,13 @@ def spell_correct_tokens(pos):
             same2 = wrong_corrected.apply(is_in_words)
             wrong_corrected = wrong_corrected[same2]
             combine_check = combine_check[same2]
-            if(len(wrong_corrected)>0):
+            if len(wrong_corrected)>0:
                 tokens = correct_tokens(tokens[0], wrong_corrected, combine_check)
             else:
                 tokens = tokens[0]
         else:
             tokens = tokens[0]
-        if(pos[1][len(pos)-1] == "SENT"):
+        if pos[1][len(pos)-1] == "SENT":
             tokens = tokens.append(DataFrame([pos[0][len(pos)-1]]),
                                    ignore_index=True)
         return tokens.tolist()
