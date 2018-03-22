@@ -57,7 +57,7 @@ if file_folder == "file":
             labels = strings[label]
         strings = strings[col]
 else:
-    strings = read_folder(in_file)
+    strings = read_folder(in_file, in_type = in_type)
 
 # Some deduplication to be done here to keep the remaining steps same
 strings = filter_data(strings)
