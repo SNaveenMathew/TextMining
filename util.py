@@ -73,7 +73,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             if is_not_nan(meta_data1["To"]):
                 recipients = recipients + str(meta_data1["To"]).split(";")
             if is_not_nan(meta_data1["Cc"]):
-                recipients = recipients + str(meta_data1["Cc"].split(";"))
+                recipients = recipients + str(meta_data1["Cc"]).split(";")
             df = df[length]
             df.columns = df.iloc[0].tolist()
             df = df.drop(0, axis=0)
