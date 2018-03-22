@@ -16,4 +16,4 @@ def visualize_word2vec_model(word2vec_model):
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1])
     for label, x, y in zip(vocabulary, X_tsne[:, 0], X_tsne[:, 1]):
         plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points')
-    return(plt.show())
+    return plt.show()

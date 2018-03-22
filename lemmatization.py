@@ -37,4 +37,4 @@ def lemmatize_treetagger(tag):
 #    return [wnl.lemmatize(s) for s in tokens]
 #
 #def lemmatize_spacy(tokens):
-#    return(tokens)
+#    return tokens

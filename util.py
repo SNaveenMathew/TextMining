@@ -40,23 +40,26 @@ puncts = set(punctuation)
 def run_treetagger(text):
     s = tagger.tag_text(text.lower())
     s = make_tags(s)
-    return(s)
+    return s
 
 #def run_spacy(text):
 #    doc = nlp(text.lower())
-#    return(doc)
+#    return doc
 #
 def read_file(file, in_type = "csv", message_col = "Message"):
     if(in_type.lower() == "csv"):
         from pandas import read_csv
-        return(read_csv(file, encoding = "latin1"))
+        return read_csv(file, encoding = "latin1")
     elif(in_type.lower() == "excel"):
         from pandas import read_excel
-        return(read_excel(file, encoding = "latin1"))
+        return read_excel(file, encoding = "latin1")
     elif(in_type.lower() == "html"):
         from pandas import read_html, concat
-        df = read_html(file)
-        if(type(df) == list):
+        try:
+            df = read_html(file)
+        except:
+            df = []
+        if(type(df) == list and len(df) > 0):
             length = len(df)-1
             meta_data = df[0:length]
             meta_data[1] = meta_data[1].T
@@ -90,53 +93,67 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             if total_english <= 2:
                 language = first_language.apply(lambda x: x.lang).value_counts()
                 language = language.index[0]
-        conversation_length = df.shape[0]
-        df = DataFrame([df, participants, timestamp, language, sender, recipients, conversation_length]).T
-        df.columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
+            conversation_length = df.shape[0]
+            df = DataFrame([df, participants, timestamp, language, sender, recipients, conversation_length]).T
+            df.columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
+        else:
+            df = DataFrame()
         return df
     else:
         text = open(file, 'r').read()
-        return(text)
+        return text
 
 def read_folder(folder, in_type = "html"):
     from os import listdir
-    from os.path import join, isfile
+    from os.path import join, isfile, isdir
     from pandas import concat
-    files = listdir(folder)
+    try:
+        files = listdir(folder)
+    except:
+        files = []
     df = []
+    print 
     for file in files:
         file = join(folder, file)
+        print(file)
         if in_type == "html" and isfile(file):
-            df.append(read_file(file, in_type))
-    df = concat(df, axis = 0, ignore_index = False)
+            temp = read_file(file, in_type)
+            print(type(temp))
+            df.append(temp)
+        elif isdir(file):
+            df.append(read_folder(file))
+    if len(df)!=0:
+        df = concat(df, axis = 0, ignore_index = False)
+    else:
+        df = DataFrame()
     return df
 
 
 def flatten_list_of_list(list_of_list):
     from itertools import chain
-    return(list(chain.from_iterable(list_of_list)))
+    return list(chain.from_iterable(list_of_list))
 
 def clean_sentences(sentences):
-    return([clean_strings(string) for string in sentences])
+    return [clean_strings(string) for string in sentences]
 
 def clean_strings(string):
     from re import sub
-    return(sub(pattern = "^(nan )*", repl = "", string = string))
+    return sub(pattern = "^(nan )*", repl = "", string = string)
 
 def pick_first_language(langs):
     if(langs!=None):
-        return(langs[0])
+        return langs[0]
     else:
-        return(langdetect.language.Language(lang = "NA", prob = 0))
+        return langdetect.language.Language(lang = "NA", prob = 0)
 
 def is_english_wp_p(langs, p = 0.5):
-    return(langs.lang == "en" and langs.prob > p)
+    return langs.lang == "en" and langs.prob > p
 
 def diffs(index, tokens):
-    return([tokens[index], tokens[index+1]])
+    return [tokens[index], tokens[index+1]]
 
 def merge_words(words):
-    return(words[0]+words[1])
+    return words[0] + words[1]
 
 def correct_tokens(tokens, wrong_corrected, combine_check):
     final_tokens = []
@@ -150,23 +167,23 @@ def correct_tokens(tokens, wrong_corrected, combine_check):
             j = j+1
             i = i+1
         i = i+1
-    return(DataFrame(final_tokens)[0])
+    return DataFrame(final_tokens)[0]
 
 def lower(text):
-    return(text.lower())
+    return text.lower()
 
 def check_spell(row):
     from spellcheck import SpellCheck
     spell_check = SpellCheck('/usr/share/dict/words')
     if(len(row[0])==1 or row[1] in [")", "(", "''", "PP$", ",", ":", '``']):
-        return(row[0])
+        return row[0]
     else:
         #ret = spell(row[0])
         ret = spell_check.correct(row[0])
-        return(ret)
+        return ret
 
 def is_in_words(word):
-    return(word in NLP_WORDS)
+    return word in NLP_WORDS
 
 # This is yet to  be developed fully. It currently returns the tokens as they are
 def spell_correct_tokens(pos):
@@ -196,44 +213,44 @@ def spell_correct_tokens(pos):
         if(pos[1][len(pos)-1] == "SENT"):
             tokens = tokens.append(DataFrame([pos[0][len(pos)-1]]),
                                    ignore_index=True)
-        return(tokens.tolist())
+        return tokens.tolist()
     except:
-        return(pos[0].tolist())
+        return pos[0].tolist()
 
 def is_not_none(row):
-    return(row!=None)
+    return row!=None
 
 def is_not_nan(num):
     try:
-        return(not(isnan(num)))
+        return not(isnan(num))
     except:
-        return(True)
+        return True
 
 #def spell_correct_pos(pos):
 #    try:
 #        tokens = spell_correct_tokens(pos)[0].tolist()
-#        return(tokens)
+#        return tokens
 #    except:
-#        return(pos[0].tolist())
+#        return pos[0].tolist()
 #
 def process_NotTag(not_tag):
     text = not_tag.split('"')
-    return(text[1])
+    return text[1]
 
 def detect_language(text):
     from langdetect import detect_langs
     try:
-        return(detect_langs(text))
+        return detect_langs(text)
     except:
-        return(None)
+        return None
 
 def remove_stopwords(tokens):
     tokens = [token for token in tokens if token not in english_stopwords]
-    return(tokens)
+    return tokens
 
 def remove_punctuations(tokens):
     tokens = [token for token in tokens if token not in puncts]
-    return(tokens)
+    return tokens
 
 
 def filter_data(data):

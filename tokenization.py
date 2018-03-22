@@ -35,10 +35,10 @@ def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text)
     if(get_lemma):
         s = [lemmatize_treetagger(tag) for tag in s]
-        return(s)
+        return s
     else:
         s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
-        return(s)
+        return s
 
 #def tokenize_spacy(text, get_lemma = False):
 #    s = run_spacy(text)
@@ -48,14 +48,14 @@ def tokenize_treetagger(text, get_lemma = False):
 #            lis.append(word.lemma_)
 #        else:
 #            lis.append(word.text)
-#    return(lis)
+#    return lis
 #
 def tokenize_sentence_nltk(text, get_lemma = False):
     text = text.replace("\n", " ").replace("\xa0", " ")
     text = sent_tokenize(text)
     text = [sent.split("(.[A-Z])") for sent in text]
     text = flatten_list_of_list(text)
-    return(text)
+    return text
 
 def tokenize_spark(sentenceDataFrame, in_column, out_column = None):
     if(out_column is not None):
@@ -63,4 +63,4 @@ def tokenize_spark(sentenceDataFrame, in_column, out_column = None):
     else:
         tokenizer = Tokenizer(inputCol = in_column, outputCol = in_column)
     tokenized = tokenizer.transform(sentenceDataFrame)
-    return(tokenized)
+    return tokenized

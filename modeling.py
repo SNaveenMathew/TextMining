@@ -18,7 +18,7 @@ def run_word2vec_model(text_file):
     # model.build_vocab(sentences)
     model.train(sentences, total_examples = model.corpus_count, epochs = 20)
 #    model.save("sample_model.w2v.bin")
-    return(model)
+    return model
 
 def apply_bigram_trigram_model(unigrams):
     from gensim.models.phrases import Phrases , Phraser
@@ -26,7 +26,7 @@ def apply_bigram_trigram_model(unigrams):
     bigram = Phraser(phrases)
     trigram = Phrases(bigram[unigrams])
     trigram = Phraser(trigram)
-    return(list(trigram[bigram[unigrams]]))
+    return list(trigram[bigram[unigrams]])
 
 def run_lda_topic_model(text_file):
     from gensim.models.ldamodel import LdaModel
@@ -45,13 +45,13 @@ def run_lda_topic_model(text_file):
     dictionary = dic.Dictionary(text)
     corpus = [dictionary.doc2bow(sent) for sent in text]
     lda = LdaModel(corpus = corpus, id2word = dictionary, passes=20)
-    return(lda)
+    return lda
 
 def build_logistic_regression(df, outcome):
     from sklearn.linear_model import LogisticRegression
     model = LogisticRegression(penalty = 'l1')
     model.fit(X = df.drop(outcome, axis=1), y = df[outcome])
-    return(model)
+    return model
 
 #def run_word2vec_model_pyspark(documentDF, tokens, out_col = None):
 #    if(out_col is not None):
@@ -62,4 +62,4 @@ def build_logistic_regression(df, outcome):
 #    for row in result.collect():
 #        text, vector = row
 #        print("Text: [%s] => \nVector: %s\n" % (", ".join(text), str(vector)))
-#    return(result)
+#    return result

@@ -23,18 +23,18 @@ from util import run_treetagger#, run_spacy
 #    if in_type == "text":
 #        tokens = tokenize_stanford(text, get_lemma)
 #        text = pos_tagger.tag(tokens)
-#        return(text)
+#        return text
 #    else:
 #        text = pos_tagger.tag(tokens)
-#        return(text)
+#        return text
 
 def run_treetagger_pos_tag_text(text):
     try:
         text = run_treetagger(text)
         text = [(s[0], s[1]) for s in text]
-        return(text)
+        return text
     except:
-        return(None)
+        return None
 
 #def run_spacy_pos_tag(text, get_lemma = False):
 #    s = run_spacy(text)
@@ -44,8 +44,8 @@ def run_treetagger_pos_tag_text(text):
 #            lis.append((word.text, word.lemma_))
 #        else:
 #            lis.append((word.text, word.tag_))
-#    return(lis)
+#    return lis
 #
 def run_treetagger_pos_tag_list(lis):
     ret = [run_treetagger_pos_tag_text(string) for string in lis]
-    return(ret)
+    return ret

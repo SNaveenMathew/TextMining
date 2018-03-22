@@ -24,8 +24,8 @@ dependency_parser = StanfordDependencyParser(path_to_jar = parser_jar,
 def run_stanford_parser(text):
     result = dependency_parser.raw_parse(text)
     dep = result.__next__()
-    return(dep)
+    return dep
 
 # Currently not working
 #def run_core_nlp_parser(text):
-#    return(parser.parse(text))
+#    return parser.parse(text)
