@@ -61,7 +61,7 @@ else:
 
 # Some deduplication to be done here to keep the remaining steps same
 strings = filter_data(strings)
-
+strings = filter_senders(strings)
 
 
 strings = strings.apply(clean_strings)

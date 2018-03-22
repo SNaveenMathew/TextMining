@@ -14,6 +14,7 @@ import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation
+from re import findall
 
 # Initializating global variables
 # Initialization for:
@@ -248,3 +249,12 @@ def filter_data(data):
     data = data.merge(max_conv, on = ['timestamp', 'sender', 'conversation_length'], how = 'inner')
     return data
 
+def filter_senders(data):
+    # Filtering senders with names like "GG *"
+    results = data.sender.apply(findgg)
+    data = data[results == 0]
+    return data
+
+
+def findgg(string):
+    return len(findall("gg[\ ]*", string.lower()))
