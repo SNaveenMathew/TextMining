@@ -63,6 +63,7 @@ else:
 strings = filter_data(strings)
 strings = filter_senders(strings)
 strings = filter_recipients(strings)
+strings = strings['df'].apply(lambda x: ". ".join(x['Message']).replace("..", ".")).reset_index()['df']
 
 strings = strings.apply(clean_strings)
 languages = strings.apply(detect_language)
@@ -108,14 +109,15 @@ sentences1 = sentences1 + inc_sentences.tolist()
 out_file = open("sample.txt", "w")
 for sent in sentences1:
     out_file.write(sent.lower().replace("( ", "(").replace(" )", ")").replace("replaced-dns ", "")+"\n")
+
 out_file.close()
 
 # 7) Run word2vec model and store word representations
-#model = run_word2vec_model("sample.txt")
-#model.wv.save_word2vec_format("big.w2v")
+model = run_word2vec_model("sample.txt")
+model.wv.save_word2vec_format("big.w2v")
 
 # 8) Visualizing the word2vec model
-#visualize_word2vec_model(model)
+visualize_word2vec_model(model)
 
 # 9) Setting up the data for building logistic regression model
 #df = zeros((len(sentences1), 100))
