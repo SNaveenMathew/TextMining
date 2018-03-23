@@ -63,7 +63,11 @@ else:
 strings = filter_data(strings)
 strings = filter_senders(strings)
 strings = filter_recipients(strings)
+strings1 = strings.drop(['df'], axis = 1).reset_index()
 strings = strings['df'].apply(lambda x: ". ".join(x['Message']).replace("..", ".")).reset_index()['df']
+from pandas import concat
+strings1 = concat([strings, strings1], axis = 1)
+strings1.to_csv("strings_with_meta_data.csv")
 
 strings = strings.apply(clean_strings)
 languages = strings.apply(detect_language)
