@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 def visualize_word2vec_model(word2vec_model):
     X = word2vec_model[word2vec_model.wv.vocab]
-    tsne = TSNE(n_components=2)
-    X_tsne = tsne.fit_transform(X, random_state = 1)
+    tsne = TSNE(n_components=2, random_state = 1)
+    X_tsne = tsne.fit_transform(X)
     vocabulary = word2vec_model.wv.vocab
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1])
     for label, x, y in zip(vocabulary, X_tsne[:, 0], X_tsne[:, 1]):
