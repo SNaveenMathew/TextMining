@@ -259,11 +259,11 @@ def filter_data(data):
     data = data.reset_index()
     # Deduplicating:
     max_conv = DataFrame(data[['sender', 'timestamp', 'conversation_length']].groupby(['sender', 'timestamp']).max())
-    sender_timestamp = max_conv.index.tolist()
-    sender = [i[0] for i in sender_timestamp]
-    timestamp = [i[1] for i in sender_timestamp]
-    max_conv['sender'] = sender
-    max_conv['timestamp'] = timestamp
+    # sender_timestamp = max_conv.index.tolist()
+    # sender = [i[0] for i in sender_timestamp]
+    # timestamp = [i[1] for i in sender_timestamp]
+    # max_conv['sender'] = sender
+    # max_conv['timestamp'] = timestamp
     max_conv = max_conv.reset_index()
     if 'index' in max_conv.columns:
         max_conv = max_conv.drop(['index'], axis=1)

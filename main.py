@@ -32,7 +32,6 @@ from lemmatization import lemmatize_treetagger
 
 DetectorFactory.seed = 0
 
-# Testing language
 in_file = open("in_file.cfg").read()
 in_file = in_file.split("\n")
 file_folder = in_file[4]
