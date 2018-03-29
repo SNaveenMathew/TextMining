@@ -10,3 +10,7 @@ metastore_db/*
 spark-warehouse/*
 *.csv
 *.xlsx
+util_temp.py
+main_temp.py
+main_temp.ipynb
+pos_tagging_temp.py
