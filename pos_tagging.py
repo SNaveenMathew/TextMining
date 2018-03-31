@@ -5,9 +5,10 @@ Created on Thu Oct 12 10:09:49 2017
 @author: naveen.nathan
 """
 
-from util import run_treetagger#, run_spacy
+# from util import run_treetagger#, run_spacy
 #from nltk.tag import StanfordPOSTagger
 #from tokenization import tokenize_stanford
+from nltk import pos_tag
 #pos_cfg = open("pos_tagger.cfg").read()
 #pos_cfg = pos_cfg.split("\n")
 #model = pos_cfg[1]
@@ -28,13 +29,13 @@ from util import run_treetagger#, run_spacy
 #        text = pos_tagger.tag(tokens)
 #        return text
 
-def run_treetagger_pos_tag_text(text):
-    try:
-        text = run_treetagger(text)
-        text = [(s[0], s[1]) for s in text]
-        return text
-    except:
-        return None
+# def run_treetagger_pos_tag_text(text):
+#     try:
+#         text = run_treetagger(text)
+#         text = [(s[0], s[1]) for s in text]
+#         return text
+#     except:
+#         return None
 
 #def run_spacy_pos_tag(text, get_lemma = False):
 #    s = run_spacy(text)
@@ -46,6 +47,10 @@ def run_treetagger_pos_tag_text(text):
 #            lis.append((word.text, word.tag_))
 #    return lis
 #
-def run_treetagger_pos_tag_list(lis):
-    ret = [run_treetagger_pos_tag_text(string) for string in lis]
-    return ret
+# def run_treetagger_pos_tag_list(lis):
+#     ret = [run_treetagger_pos_tag_text(string) for string in lis]
+#     return ret
+
+def nltk_pos_tag(tokens):
+    return pos_tag(tokens)
+

@@ -2,32 +2,22 @@
 """
 Created on Thu Oct 12 12:33:25 2017
 
-@author: naveen.nathan
+@author: huijing.deng
 """
 
-from treetaggerwrapper import TreeTagger, make_tags
+
 from math import isnan
 #from en_core_web_md import load
 from os import environ
-from pandas import DataFrame
+from pandas import DataFrame, concat
 import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation
-from re import findall
+from re import findall, sub, compile
+import pandas as pd
+from dateparser import parse
 
-# Initializating global variables
-# Initialization for:
-# 1) Treetagger
-# 2) Spacy
-treetagger_home = open('treetagger.cfg').read()
-environ["TREETAGGER_HOME"] = treetagger_home
-tagger = TreeTagger(TAGLANG = 'en')
-NLP_WORDS = set([word.lower() for word in NLP_WORDS])
-english_stopwords = set(stopwords.words('english'))
-puncts = set(punctuation)
-# Commenting spaCy to reduce initialization overhead
-#nlp = load()
 
 # Other utilities:
 # 1) Read text file
@@ -37,15 +27,12 @@ puncts = set(punctuation)
 # 5) Check whether language is English with prabability > p (default = 0.5)
 # 6) Spell correct (in progress)
 
-def run_treetagger(text):
-    s = tagger.tag_text(text.lower())
-    s = make_tags(s)
-    return s
+patterns = [".*about to release.*", ".*affare top.*", ".*alleged buyback.*",
+".*alleged cap* increase.*", ".*alleged spinoff.*", ".*banking secrecy.*",
+".*be careful with * info.*", ".*before the announcement.*", ".*bid letters submission planning.*",
+".*buy-out in programma.*", ".*buyout planeado? previsto.*", ".*cap* increase plans.*"]
+patterns = compile("|".join(patterns))
 
-#def run_spacy(text):
-#    doc = nlp(text.lower())
-#    return doc
-#
 def read_file(file, in_type = "csv", message_col = "Message"):
     if in_type.lower() == "csv":
         from pandas import read_csv
@@ -54,16 +41,43 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         from pandas import read_excel
         return read_excel(file, encoding = "latin1")
     elif in_type.lower() == "html":
-        from pandas import read_html, concat
+        from pandas import read_html
         try:
             df = read_html(file)
         except:
             df = []
         if type(df) == list and len(df) > 0:
-            length = len(df)-1
+            
+            if len(df) == 6:
+                length = len(df)
+                conversation = []
+                language = "null"
+                num_of_conversation_turns = 0
+            elif len(df) == 7:
+                length = len(df)-1
+                conversation = get_conversation(df)
+                languages = conversation[message_col].apply(detect_language)
+                first_language = languages.apply(pick_first_language)
+                english_only = first_language.apply(is_english_wp_p)
+                total_english = english_only.sum()
+                language = "en"
+                if total_english <= 2:
+                    language = first_language.apply(lambda x: x.lang).value_counts()
+                    language = language.index[0]
+                num_of_conversation_turns = conversation.shape[0]
+                
+            
             meta_data = df[0:length]
             meta_data[1] = meta_data[1].T
             meta_data[2] = meta_data[2].T
+            import numpy as np
+            if meta_data[1][0][0] == "No reviewing has been done":
+                d = np.array([["Date","null"],["Action Status","null"],["Reviewer","null"]])
+                meta_data[1] = pd.DataFrame(data=d,columns=[0, 1])
+            if meta_data[2][0][0] == "No comments have been left":
+                d = np.array([["Date","null"],["Comment","null"],["Reviewer","null"]])
+                meta_data[2] = pd.DataFrame(data=d,columns=[0, 1])
+                
             meta_data = meta_data[:-3] + meta_data[-2:]
             meta_data = concat(meta_data, axis = 0, ignore_index = True)
             timestamp = meta_data[2]
@@ -71,42 +85,62 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             timestamp = str(timestamp).lower()
             meta_data1 = meta_data[1]
             meta_data1.index = meta_data[0]
+            
+            messageType = str(meta_data1['Message Type:']).lower()
+            messageDirection = str(meta_data1['Message Direction:']).lower()
+            case = str(meta_data1['Case:']).lower()
+            captureDate = str(meta_data1['Capture Date:']).lower()
+            itemId = str(meta_data1['Item ID:']).lower()
+            policyAction = str(meta_data1['Policy Action:']).lower()
+          
+            statusMarkDate = str(meta_data1['Date'].tolist()[0]).lower()
+            status_reviewer = str(meta_data1['Reviewer'].tolist()[0]).lower()
+            status = str(meta_data1['Action Status']).lower()
+
+            commentDate = str(meta_data1['Date'].tolist()[1]).lower()
+            comment = str(meta_data1['Comment']).lower()
+            comment_reviewer = str(meta_data1['Reviewer'].tolist()[1]).lower()
             meta_data1['From'] = str(meta_data1['From']).lower()
             meta_data1["To"] = str(meta_data1["To"]).lower()
             meta_data1["Cc"] = str(meta_data1["Cc"]).lower()
-            participants = meta_data1["From"] + meta_data1["To"] + meta_data1["Cc"]
+            participants = meta_data1["From"]+ ";" + meta_data1["To"]+ ";" + meta_data1["Cc"]
             sender = meta_data1["From"]
-            recipients = []
             if is_not_nan(meta_data1["To"]):
-                recipients = recipients + meta_data1["To"].split(";")
+                recipients = meta_data1["To"]
             if is_not_nan(meta_data1["Cc"]):
-                recipients = recipients + meta_data1["Cc"].split(";")
-            df = df[length]
-            df.columns = df.iloc[0].tolist()
-            df = df.drop(0, axis=0)
-            df = df.reset_index(drop=True)
-            languages = df[message_col].apply(detect_language)
-            first_language = languages.apply(pick_first_language)
-            english_only = first_language.apply(is_english_wp_p)
-            total_english = english_only.sum()
-            language = "en"
-            if total_english <= 2:
-                language = first_language.apply(lambda x: x.lang).value_counts()
-                language = language.index[0]
-            conversation_length = df.shape[0]
-            df = DataFrame([df, participants, timestamp, language, sender, recipients, conversation_length]).T
-            df.columns = ["df", "participants", "timestamp", "language", "sender", "recipients", "conversation_length"]
-        else:
+                recipients = recipients+ ";" + meta_data1["Cc"]
+
+            subject = meta_data1["Subject"]
+            messages = tuple(conversation[message_col].tolist())
+            df = DataFrame([itemId, messageType, messageDirection, case, captureDate, policyAction, statusMarkDate, status, status_reviewer, commentDate, comment, comment_reviewer, participants, timestamp, language, sender, recipients, subject, conversation, num_of_conversation_turns, messages]).T
+            df.columns = ["itemId", "messageType", "messageDirection", "case", "captureDate", "policyAction", "statusMarkDate", "status", "status_reviewer", "commentDate", "comment", "comment_reviewer", "participants", "timestamp", "language", "sender", "recipients", "subject", "conversation", "num_of_conversation_turns", "messages"]
+
+        else:            
             df = DataFrame()
         return df
+    
     else:
         text = open(file, 'r').read()
         return text
+    
+
+
+def get_conversation(data):
+    length = len(data) - 1
+    conversation = data[length]
+    conversation.columns = conversation.iloc[0].tolist()
+    conversation = conversation.drop(0, axis=0)
+    conversation = conversation.reset_index(drop=True)  
+    return conversation
+
+def get_redundaunt_info(data):
+    data = data[["timestamp", "sender", "recipients", "subject"]]
+    data = data.apply(lambda x: " ".join(x), axis=1).value_counts()
+    return data
 
 def read_folder(folder, in_type = "html"):
     from os import listdir
     from os.path import join, isfile, isdir
-    from pandas import concat
     try:
         files = listdir(folder)
     except:
@@ -115,15 +149,16 @@ def read_folder(folder, in_type = "html"):
     print 
     for file in files:
         file = join(folder, file)
-        print(file)
+        #print(file)
         if in_type == "html" and isfile(file):
             temp = read_file(file, in_type)
-            print(type(temp))
+            #print(type(temp))
             df.append(temp)
         elif isdir(file):
             df.append(read_folder(file))
     if len(df)!=0:
         df = concat(df, axis = 0, ignore_index = False)
+        df = df.reset_index(drop = True)
     else:
         df = DataFrame()
     return df
@@ -252,23 +287,58 @@ def remove_punctuations(tokens):
     tokens = [token for token in tokens if token not in puncts]
     return tokens
 
+def process_date(date):
+    date = date.replace(".", "").split(", ")[1]
+    dt = parse(date)
+    date = str(dt.year)
+    month = str(dt.month)
+    day = str(dt.day)
+    if len(month) == 1:
+        month = "0" + month
+    
+    if len(day) == 1:
+        day = "0" + day
+    
+    date = date + "/" + month + "/" + day
+    return date
 
-def filter_data(data):
-    # Retaining only English
-    data = data[data['language'] == "en"]
-    data = data.reset_index()
-    # Deduplicating:
-    max_conv = DataFrame(data[['sender', 'timestamp', 'conversation_length']].groupby(['sender', 'timestamp']).max())
-    # sender_timestamp = max_conv.index.tolist()
-    # sender = [i[0] for i in sender_timestamp]
-    # timestamp = [i[1] for i in sender_timestamp]
-    # max_conv['sender'] = sender
-    # max_conv['timestamp'] = timestamp
-    max_conv = max_conv.reset_index()
+def get_maximal_conversation(data, columns):
+    max_conv = data[columns].groupby(columns).count().reset_index()
     if 'index' in max_conv.columns:
         max_conv = max_conv.drop(['index'], axis=1)
-    data = data.merge(max_conv, on = ['timestamp', 'sender', 'conversation_length'], how = 'inner')
-    return data
+    
+    if 'count' in max_conv.columns:
+        max_conv = max_conv.drop(['count'], axis=1)
+    
+    return max_conv
+
+def filter_data(data, message_col = 'messages'):
+    # Retaining only English
+    data = data[data['language'] == "en"].reset_index(drop = True)
+    data['timestamp'] = data['timestamp'].apply(process_date).reset_index(drop = True)
+    # Deduplicating:
+    columns = ['participants', 'timestamp', 'sender', 'recipients', message_col]
+    max_conv = get_maximal_conversation(data, columns)
+    
+    max_conv1 = max_conv.merge(max_conv, on = ['participants', 'timestamp', 'sender', 'recipients'], how = 'outer')
+    max_conv2 = max_conv1.groupby(['participants', 'timestamp', 'sender', 'recipients', 'messages_x']).count()
+    max_conv2 = max_conv2[max_conv2['messages_y']==1].drop(['messages_y'], axis=1)
+    shp = max_conv2.shape
+    if shp[1]!=0:
+        max_conv2.columns = columns
+    
+    max_conv1 = max_conv1[max_conv1[message_col + '_x'] != max_conv1[message_col + '_y']]
+    if max_conv1.shape[0] > 0:
+        max_conv1['subset'] = max_conv1.apply(lambda x: set(x[message_col + '_x']).issubset(set(x[message_col + '_y'])), axis=1)
+        max_conv1 = max_conv1.drop([message_col + '_y'], axis=1)
+        max_conv1.columns = columns + ['subset']
+        max_conv1 = max_conv1.groupby(columns).sum().reset_index()
+        max_conv1 = max_conv1[max_conv1['subset']==0]
+        max_conv3 = max_conv.merge(max_conv1, on = columns, how = 'inner').reset_index(drop = True).drop(['subset'], axis = 1)
+        max_conv4 = concat([max_conv2, max_conv3], axis = 0)
+        return max_conv4
+    else:
+        return max_conv2
 
 def filter_senders(data, sender_col = "sender"):
     # Filtering senders with names like "GG *"
@@ -280,6 +350,10 @@ def findgg(string):
     return len(findall("gg[\ ]*", string.lower()))
 
 def filter_recipients(data, recipients_col = "recipients"):
-    results = data[recipients_col].apply(len)
+    results = data[recipients_col].apply(lambda x: len(x.split(";")))
     data = data[results <= 5]
     return data
+
+def search_patterns(string):
+    com = findall(patterns, string.lower())
+    return len(com) > 0
