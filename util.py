@@ -97,13 +97,17 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             meta_data1['From'] = str(meta_data1['From']).lower()
             meta_data1["To"] = str(meta_data1["To"]).lower()
             meta_data1["Cc"] = str(meta_data1["Cc"]).lower()
-            participants = meta_data1["From"]+ ";" + meta_data1["To"]+ ";" + meta_data1["Cc"]
+            participants = [meta_data1["From"]]
             sender = meta_data1["From"]
             if is_not_nan(meta_data1["To"]):
                 recipients = meta_data1["To"]
+                participants = participants + [meta_data1["To"]]
             if is_not_nan(meta_data1["Cc"]):
                 recipients = recipients+ ";" + meta_data1["Cc"]
+                participants = participants + [meta_data1["Cc"]]
 
+            participants.sort()
+            participants = tuple(participants)
             subject = meta_data1["Subject"]
             messages = tuple(conversation[message_col].tolist())
             df = DataFrame([itemId, messageType, messageDirection, case, captureDate, policyAction, statusMarkDate, status, status_reviewer, commentDate, comment, comment_reviewer, participants, timestamp, language, sender, recipients, subject, conversation, num_of_conversation_turns, messages]).T
@@ -311,11 +315,11 @@ def filter_data(data, message_col = 'messages'):
     data = data[data['language'] == "en"].reset_index(drop = True)
     data['timestamp'] = data['timestamp'].apply(process_date).reset_index(drop = True)
     # Deduplicating:
-    columns = ['participants', 'timestamp', 'sender', 'recipients', message_col]
+    columns = ['participants', 'timestamp', message_col]
     max_conv = get_maximal_conversation(data, columns)
     
-    max_conv1 = max_conv.merge(max_conv, on = ['participants', 'timestamp', 'sender', 'recipients'], how = 'outer')
-    max_conv2 = max_conv1.groupby(['participants', 'timestamp', 'sender', 'recipients', 'messages_x']).count()
+    max_conv1 = max_conv.merge(max_conv, on = ['participants', 'timestamp'], how = 'outer')
+    max_conv2 = max_conv1.groupby(['participants', 'timestamp', 'messages_x']).count()
     max_conv2 = max_conv2[max_conv2['messages_y']==1].drop(['messages_y'], axis=1)
     shp = max_conv2.shape
     if shp[1]!=0:
