@@ -27,12 +27,6 @@ from dateparser import parse
 # 5) Check whether language is English with prabability > p (default = 0.5)
 # 6) Spell correct (in progress)
 
-patterns = [".*about to release.*", ".*affare top.*", ".*alleged buyback.*",
-".*alleged cap* increase.*", ".*alleged spinoff.*", ".*banking secrecy.*",
-".*be careful with * info.*", ".*before the announcement.*", ".*bid letters submission planning.*",
-".*buy-out in programma.*", ".*buyout planeado? previsto.*", ".*cap* increase plans.*"]
-patterns = compile("|".join(patterns))
-
 def read_file(file, in_type = "csv", message_col = "Message"):
     if in_type.lower() == "csv":
         from pandas import read_csv
@@ -354,6 +348,10 @@ def filter_recipients(data, recipients_col = "recipients"):
     data = data[results <= 5]
     return data
 
-def search_patterns(string):
-    com = findall(patterns, string.lower())
+def search_pattern(string, pattern):
+    com = findall(pattern, string.lower())
     return len(com) > 0
+
+def search_patterns(string, patterns):
+    results = patterns.apply(lambda x: search_pattern(x, string))
+    return results
