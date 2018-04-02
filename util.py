@@ -109,11 +109,12 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             participants.sort()
             participants = tuple(participants)
             subject = meta_data1["Subject"]
+            conversation[message_col] = conversation[message_col].apply(remove_punctuations).apply(remove_excess_spaces)
             messages = tuple(conversation[message_col].tolist())
             df = DataFrame([itemId, messageType, messageDirection, case, captureDate, policyAction, statusMarkDate, status, status_reviewer, commentDate, comment, comment_reviewer, participants, timestamp, language, sender, recipients, subject, conversation, num_of_conversation_turns, messages]).T
             df.columns = ["itemId", "messageType", "messageDirection", "case", "captureDate", "policyAction", "statusMarkDate", "status", "status_reviewer", "commentDate", "comment", "comment_reviewer", "participants", "timestamp", "language", "sender", "recipients", "subject", "conversation", "num_of_conversation_turns", "messages"]
 
-        else:            
+        else:
             df = DataFrame()
         return df
     
@@ -121,7 +122,8 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         text = open(file, 'r').read()
         return text
     
-
+def remove_excess_spaces(string):
+    return sub(pattern = " {2,}", repl = " ", string = string)
 
 def get_conversation(data):
     length = len(data) - 1
@@ -170,7 +172,6 @@ def clean_sentences(sentences):
     return [clean_strings(string) for string in sentences]
 
 def clean_strings(string):
-    from re import sub
     return sub(pattern = "^(nan )*", repl = "", string = string)
 
 def pick_first_language(langs):
