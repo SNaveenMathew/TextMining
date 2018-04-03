@@ -150,7 +150,6 @@ def read_folder(folder, in_type = "html"):
     except:
         files = []
     df = []
-    print 
     for file in files:
         file = join(folder, file)
         #print(file)
