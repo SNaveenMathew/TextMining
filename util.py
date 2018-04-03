@@ -363,3 +363,11 @@ def search_pattern(string, pattern):
 def search_patterns(string, patterns):
     results = patterns.apply(lambda x: search_pattern(x, string))
     return results
+
+def get_semantic_similarity(word2vec_model):
+    from sklearn.metrics.pairwise import cosine_similarity
+    mat = word2vec_model[word2vec_model.wv.vocab]
+    sim = DataFrame(cosine_similarity(mat, mat))
+    sim.columns = word2vec_model.wv.vocab
+    sim.index = word2vec_model.wv.vocab
+    return sim
