@@ -13,11 +13,12 @@ from pandas import DataFrame, concat
 import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
-from string import punctuation
+from string import punctuation as puncts
 from re import findall, sub, compile
 import pandas as pd
 from dateparser import parse
 
+puncts1 = "[" + puncts + "]"
 
 # Other utilities:
 # 1) Read text file
@@ -109,7 +110,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             participants.sort()
             participants = tuple(participants)
             subject = meta_data1["Subject"]
-            conversation[message_col] = conversation[message_col].apply(remove_punctuations).apply(remove_excess_spaces)
+            conversation[message_col] = conversation[message_col].apply(remove_punctuations_string).apply(remove_excess_spaces)
             messages = tuple(conversation[message_col].tolist())
             df = DataFrame([itemId, messageType, messageDirection, case, captureDate, policyAction, statusMarkDate, status, status_reviewer, commentDate, comment, comment_reviewer, participants, timestamp, language, sender, recipients, subject, conversation, num_of_conversation_turns, messages]).T
             df.columns = ["itemId", "messageType", "messageDirection", "case", "captureDate", "policyAction", "statusMarkDate", "status", "status_reviewer", "commentDate", "comment", "comment_reviewer", "participants", "timestamp", "language", "sender", "recipients", "subject", "conversation", "num_of_conversation_turns", "messages"]
@@ -121,7 +122,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
     else:
         text = open(file, 'r').read()
         return text
-    
+
+def remove_punctuations_string(string):
+    return sub(pattern = puncts1, repl = "", string = string)
+
 def remove_excess_spaces(string):
     return sub(pattern = " {2,}", repl = " ", string = string)
 
