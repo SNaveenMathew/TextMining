@@ -367,7 +367,28 @@ def search_patterns(string, patterns):
 def get_semantic_similarity(word2vec_model):
     from sklearn.metrics.pairwise import cosine_similarity
     mat = word2vec_model[word2vec_model.wv.vocab]
-    sim = DataFrame(cosine_similarity(mat, mat))
+    sim = DataFrame(cosine_similarity(mat))
     sim.columns = word2vec_model.wv.vocab
     sim.index = word2vec_model.wv.vocab
     return sim
+
+def get_character_similarity(vocab, ratio_type = 'ratio'):
+    from fuzzywuzzy import fuzz
+    vocab = DataFrame(vocab)
+    vocab['dummy'] = 1
+    vocab = vocab.merge(vocab, on = 'dummy', how = 'outer')
+    vocab = vocab.drop(['dummy'], axis = 1)
+    vocab.columns = ['word1', 'word2']
+    if ratio_type == "ratio":
+        func = fuzz.ratio
+    elif ratio_type == "partial_ratio":
+        func = fuzz.partial_ratio
+    elif ratio_type == "token_sort_ratio":
+        func = fuzz.token_sort_ratio
+    else:
+        func = fuzz.token_set_ratio
+    vocab[ratio_type] = vocab.apply(lambda x: (func(x['word1'], x['word2']))/100, axis=1).to_frame()
+    vocab = vocab.pivot_table(index = ['word1'], columns = ['word2'])
+    del vocab.index.name
+    vocab.columns = vocab.columns.droplevel()
+    return vocab

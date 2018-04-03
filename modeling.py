@@ -63,3 +63,9 @@ def build_logistic_regression(df, outcome):
 #        text, vector = row
 #        print("Text: [%s] => \nVector: %s\n" % (", ".join(text), str(vector)))
 #    return result
+
+def run_aff_prop_with_distances(distances):
+    from sklearn.cluster import AffinityPropagation
+    aff = AffinityPropagation(max_iter = 1000, affinity = 'precomputed')
+    aff.fit(distances)
+    return aff
