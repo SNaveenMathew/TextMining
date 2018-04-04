@@ -19,6 +19,7 @@ import pandas as pd
 from dateparser import parse
 
 puncts1 = "[" + puncts + "]"
+NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 
 # Other utilities:
 # 1) Read text file
