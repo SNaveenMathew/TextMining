@@ -16,7 +16,7 @@ def run_word2vec_model(text_file):
     sentences = LineSentence(text_file)
     model = Word2Vec(sentences, sg=1, workers=5, size=100, min_count=2, window=5)
     # model.build_vocab(sentences)
-    model.train(sentences, total_examples = model.corpus_count, epochs = 20)
+    model.train(sentences, total_examples = model.corpus_count, epochs = 5)
 #    model.save("sample_model.w2v.bin")
     return model
 
