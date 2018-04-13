@@ -5,7 +5,7 @@ Created on Thu Oct 12 12:33:25 2017
 @author: huijing.deng
 """
 
-
+from treetaggerwrapper import TreeTagger, make_tags
 from math import isnan
 #from en_core_web_md import load
 from os import environ
@@ -18,6 +18,9 @@ from re import findall, sub, compile
 import pandas as pd
 from dateparser import parse
 
+treetagger_home = open('treetagger.cfg').read()
+environ["TREETAGGER_HOME"] = treetagger_home
+tagger = TreeTagger(TAGLANG = 'en')
 puncts1 = "[" + puncts + "]"
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 
@@ -28,6 +31,11 @@ NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 # 4) Pick language with highest probability from set of languages
 # 5) Check whether language is English with prabability > p (default = 0.5)
 # 6) Spell correct (in progress)
+
+def run_treetagger(text):
+    s = tagger.tag_text(text.lower())
+    s = make_tags(s)
+    return(s)
 
 def read_file(file, in_type = "csv", message_col = "Message"):
     if in_type.lower() == "csv":
