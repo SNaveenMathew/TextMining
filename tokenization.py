@@ -6,10 +6,10 @@ Created on Thu Oct 12 09:52:31 2017
 """
 
 #from nltk.tokenize.stanford import StanfordTokenizer
-from util import run_treetagger, flatten_list_of_list, process_NotTag
-from lemmatization import lemmatize_treetagger
+from util import flatten_list_of_list#, process_NotTag, run_treetagger
+# from lemmatization import lemmatize_treetagger
 from nltk.tokenize import sent_tokenize
-import treetaggerwrapper
+# import treetaggerwrapper
 from pyspark.ml.feature import Tokenizer
 
 # Initialization
@@ -31,14 +31,14 @@ from pyspark.ml.feature import Tokenizer
 #    text = s.tokenize(text.lower())
 #    return text
 #
-def tokenize_treetagger(text, get_lemma = False):
-    s = run_treetagger(text)
-    if get_lemma:
-        s = [lemmatize_treetagger(tag) for tag in s]
-        return s
-    else:
-        s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
-        return s
+# def tokenize_treetagger(text, get_lemma = False):
+#     s = run_treetagger(text)
+#     if get_lemma:
+#         s = [lemmatize_treetagger(tag) for tag in s]
+#         return s
+#     else:
+#         s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
+#         return s
 
 #def tokenize_spacy(text, get_lemma = False):
 #    s = run_spacy(text)
