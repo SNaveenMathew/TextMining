@@ -16,8 +16,7 @@ sys.path.append(join(SPARK_HOME, "python", "lib"))
 sys.path.append(join(SPARK_HOME,"python", "lib", "pyspark.zip"))
 sys.path.append(join(SPARK_HOME,"python", "lib", "py4j-0.10.4-src.zip"))
 
-from pyspark import SparkContext
-from pyspark import SparkConf
+from pyspark import SparkContext, SparkConf
 
 conf=SparkConf()
 conf.set("spark.executor.memory", "8g")
