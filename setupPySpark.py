@@ -9,7 +9,7 @@ import sys
 from os import environ
 from os.path import join
 
-environ['SPARK_HOME'] = "C:\spark-2.2.0-bin-hadoop2.7"
+environ['SPARK_HOME'] = "C:\spark-2.3.0-bin-hadoop2.7"
 SPARK_HOME = environ['SPARK_HOME']
 sys.path.append(join(SPARK_HOME, "python"))
 sys.path.append(join(SPARK_HOME, "python", "lib"))
