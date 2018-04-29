@@ -1,7 +1,8 @@
 from pyspark.sql.functions import regexp_replace
-from pyspark.sql.functions import col, udf
+from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType, ArrayType
 from nltk.tokenize import sent_tokenize
+from tokenization import tokenize_treetagger
 
 # def tokenize_spark(sentenceDataFrame, in_column, out_column = None):
 #     if out_column is not None:
@@ -20,4 +21,12 @@ def tokenize_sentence_nltk_spark(df, in_col, out_col = None):
         df = df.withColumn(out_col, sent_tokenize_udf(in_col))
     else:
         df = df.withColumn(in_col, sent_tokenize_udf(in_col))
+    return df
+
+def tokenize_treetagger_spark(df, in_col, out_col = None, get_lemma = False):
+    tokenize_treetagger_udf = udf(lambda x: [tokenize_treetagger(y, get_lemma = get_lemma) for y in x], ArrayType(elementType = StringType()))
+    if out_col is not None:
+        df = df.withColumn(out_col, tokenize_treetagger_udf(in_col))
+    else:
+        df = df.withColumn(in_col, tokenize_treetagger_udf(in_col))
     return df

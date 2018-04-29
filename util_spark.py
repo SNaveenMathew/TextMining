@@ -1,6 +1,6 @@
 from pyspark.ml.feature import StopWordsRemover
 from util import detect_language
-from pyspark.sql.functions import col, udf
+from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
 detect_language_udf = udf(lambda x: detect_language(" ".join(x))[0].lang, StringType())

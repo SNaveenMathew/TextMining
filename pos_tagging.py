@@ -29,10 +29,13 @@ from util import run_treetagger#, run_spacy
 #        text = pos_tagger.tag(tokens)
 #        return text
 
-def run_treetagger_pos_tag_text(text):
+def run_treetagger_pos_tag_text(text, get_lemma = False):
     try:
         text = run_treetagger(text)
-        text = [(s[0], s[1]) for s in text]
+        if get_lemma:
+            text = [(s[2], s[1]) for s in text]
+        else:
+            text = [(s[0], s[1]) for s in text]
         return text
     except:
         return None

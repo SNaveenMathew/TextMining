@@ -7,7 +7,7 @@ Created on Thu Oct 12 09:52:31 2017
 
 #from nltk.tokenize.stanford import StanfordTokenizer
 from util import flatten_list_of_list, process_NotTag, run_treetagger
-# from lemmatization import lemmatize_treetagger
+from lemmatization import lemmatize_treetagger
 from nltk.tokenize import sent_tokenize
 import treetaggerwrapper
 from re import sub
