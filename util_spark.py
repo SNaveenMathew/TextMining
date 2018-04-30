@@ -1,7 +1,9 @@
-from pyspark.ml.feature import StopWordsRemover
+from pyspark.ml.feature import StopWordsRemover, Normalizer
 from util import detect_language, spell_correct_tokens
-from pyspark.sql.functions import udf
+from pyspark.sql.functions import udf, monotonically_increasing_id
 from pyspark.sql.types import StringType, ArrayType
+from pyspark.mllib.linalg.distributed import IndexedRow, IndexedRowMatrix
+from pandas import DataFrame
 
 def flatten_list(lis):
     out = []
@@ -41,3 +43,17 @@ def flatten_list_of_tokens(df, in_col, out_col = None):
     else:
         df = df.withColumn(in_col, flatten_list_of_tokens_udf(in_col))
     return df
+
+def get_semantic_similarity_spark(model):
+    df = model.getVectors()
+    normalizer = Normalizer(inputCol="vector", outputCol="norm")
+    data = normalizer.transform(df)
+    data = data.withColumn("ID", monotonically_increasing_id())
+    mat = IndexedRowMatrix(
+    data.select("ID", "norm")\
+    .rdd.map(lambda row: IndexedRow(row.ID, row.norm.toArray()))).toBlockMatrix()
+    sim1 = mat.multiply(mat.transpose())
+    sim1 = DataFrame(sim1.toLocalMatrix().toArray())
+    data_list = data.select('word').collect()
+    sim1.columns = sim1.index = [str(i['word']) for i in data_list]
+    return sim1
