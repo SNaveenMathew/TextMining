@@ -15,7 +15,6 @@ from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
 from string import punctuation as puncts
 from re import findall, sub, compile
-import pandas as pd
 from dateparser import parse
 
 treetagger_home = open('treetagger.cfg').read()
@@ -77,10 +76,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             import numpy as np
             if meta_data[1][0][0] == "No reviewing has been done":
                 d = np.array([["Date","null"],["Action Status","null"],["Reviewer","null"]])
-                meta_data[1] = pd.DataFrame(data=d,columns=[0, 1])
+                meta_data[1] = DataFrame(data=d,columns=[0, 1])
             if meta_data[2][0][0] == "No comments have been left":
                 d = np.array([["Date","null"],["Comment","null"],["Reviewer","null"]])
-                meta_data[2] = pd.DataFrame(data=d,columns=[0, 1])
+                meta_data[2] = DataFrame(data=d,columns=[0, 1])
                 
             meta_data = meta_data[:-3] + meta_data[-2:]
             meta_data = concat(meta_data, axis = 0, ignore_index = True)
@@ -231,10 +230,10 @@ def check_spell(row):
 def is_in_words(word):
     return word in NLP_WORDS
 
-# This is yet to  be developed fully. It currently returns the tokens as they are
 def spell_correct_tokens(pos):
     # This only merges 2 consecutive words & checks if they are both incorrectly spelled
     from autocorrect import spell
+    pos = DataFrame(pos)
     try:
         tokens = pos[pos[1]!="SENT"]
         updated_tokens = tokens.apply(check_spell, axis = 1).apply(lower)
