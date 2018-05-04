@@ -43,7 +43,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
     elif in_type.lower() == "excel":
         from pandas import read_excel
         return read_excel(file, encoding = "latin1")
-    elif in_type.lower() == "html":
+    elif in_type.lower() == "html_chat":
         from pandas import read_html
         try:
             df = read_html(file)
@@ -126,10 +126,61 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         else:
             df = DataFrame()
         return df
-    
+    elif in_type.lower() == "html_email":
+        from bs4 import BeautifulSoup
+        from pandas import read_html
+        from dateparser import parse
+        html = BeautifulSoup(open(file, "rb").read(), "html.parser")
+        all_fields = ["From ", "Date ", "To", "Cc", "Subject"]
+        all_fields_pattern = "|".join(all_fields)
+        readhtml = read_html(file)
+        dic = process_meta_data(" ".join(readhtml[0].T[0].tolist()), all_fields_pattern)
+        t1 = readhtml[1]
+        values = t1[1].tolist()
+        keys = t1[0]
+        for i in range(len(keys)):
+            dic[keys[i]] = values[i]
+        
+        meta_data = [dic]
+        all_content = [sub(string = a.text, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in html.findAll("p", class_="MsoNormal") if a.text!='\xa0']
+        all_fields = ["From: ", "Sent: ", "To: ", "Subject: "]
+        all_fields_pattern = "|".join(all_fields)
+        metadata_start_pattern = "^[\>]*[\ ]*From: "
+        metadata_stop_pattern = "Subject: "
+        start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0] + [len(all_content)]
+        stop_index = [-1] + [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
+        ranges = [(stop_index[i]+1, start_index[i]) for i, val in enumerate(start_index)]
+        contents = []
+        for rng in ranges:
+            string = "\n".join(all_content[rng[0]:rng[1]])
+            contents.append(string)
+        
+        start_index = start_index[:-1]
+        stop_index = stop_index[1:]
+        ranges = [(start_index[i], stop_index[i]+1) for i, val in enumerate(start_index)]
+        meta_d = []
+        for rng in ranges:
+            string = "\n".join(all_content[rng[0]:rng[1]])
+            meta_d.append(string)
+        
+        for meta in meta_d:
+            meta_data.append(process_meta_data(meta, all_fields_pattern))
+
+        df = DataFrame({"meta_data": meta_data, "conversation": contents})
+        return df
     else:
         text = open(file, 'r').read()
         return text
+
+def process_meta_data(meta_data_string, all_fields_pattern):
+    from re import split, findall
+    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "") for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
+    vals = [st.strip() for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
+    dic = {}
+    for i in range(len(vals)):
+        dic[keys[i]] = vals[i]
+    
+    return dic
 
 def remove_punctuations_string(string):
     return sub(pattern = puncts1, repl = "", string = string)
@@ -150,7 +201,7 @@ def get_redundaunt_info(data):
     data = data.apply(lambda x: " ".join(x), axis=1).value_counts()
     return data
 
-def read_folder(folder, in_type = "html"):
+def read_folder(folder, in_type = "html_chat"):
     from os import listdir
     from os.path import join, isfile, isdir
     try:
@@ -161,7 +212,7 @@ def read_folder(folder, in_type = "html"):
     for file in files:
         file = join(folder, file)
         #print(file)
-        if in_type == "html" and isfile(file):
+        if in_type == "html_chat" or in_type == "html_email" and isfile(file):
             temp = read_file(file, in_type)
             #print(type(temp))
             df.append(temp)
