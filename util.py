@@ -160,7 +160,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         ranges = [(start_index[i], stop_index[i]+1) for i, val in enumerate(start_index)]
         meta_d = []
         for rng in ranges:
-            string = "\n".join(all_content[rng[0]:rng[1]])
+            string = (". \n".join([a for a in all_content[rng[0]:rng[1]] if a!= ""])).strip()
             meta_d.append(string)
         
         for meta in meta_d:

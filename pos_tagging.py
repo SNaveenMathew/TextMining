@@ -33,12 +33,12 @@ def run_treetagger_pos_tag_text(text, get_lemma = False):
     try:
         text = run_treetagger(text)
         if get_lemma:
-            text = [(s[2], s[1]) for s in text]
+            text = [(str(s[2]), str(s[1])) for s in text]
         else:
-            text = [(s[0], s[1]) for s in text]
+            text = [(str(s[0]), str(s[1])) for s in text]
         return text
     except:
-        return None
+        return [('', '')]
 
 #def run_spacy_pos_tag(text, get_lemma = False):
 #    s = run_spacy(text)

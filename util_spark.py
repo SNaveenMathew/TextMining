@@ -7,8 +7,10 @@ from pandas import DataFrame
 
 def flatten_list(lis):
     out = []
-    for l in lis:
-        out = out + l
+    if lis is not None:
+        for l in lis:
+            if l is not None:
+                out = out + l
     return out
 
 detect_language_udf = udf(lambda x: detect_language(" ".join(x))[0].lang, StringType())
