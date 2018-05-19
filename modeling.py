@@ -57,25 +57,24 @@ def run_aff_prop_with_distances(distances):
     aff.fit(distances)
     return aff
 
-def run_kmeans(data, index = None, transforms = None, autoenc_cols = None, outfile_prefix = ""):
+def run_kmeans(data, transforms = None, autoenc_cols = None, outfile_prefix = ""):
     from sklearn.cluster import KMeans
-    from util import label_data
     from pickle import dump
+    from pandas import DataFrame
     n_cluster = optimal_k_silhouette(data, [i+2 for i in range(9)])
     kmeans = KMeans(init = 'k-means++', n_clusters =  n_cluster, n_init = 10)
-    if index is None:
-        dump(kmeans, open(outfile_prefix + "kmeans_model.pkl", "wb"))
-    else:
-        dump(kmeans, open(outfile_prefix + "kmeans_model_" + index + ".pkl", "wb"))
+    dump(kmeans, open(outfile_prefix + "kmeans_model.pkl", "wb"))
     cluster_labels = kmeans.fit_predict(data)
-    data = label_data(data, index, cluster_labels)
+    data = DataFrame(data)
+    data['cluster'] = cluster_labels
     return data
 
 def optimal_k_silhouette(data, range_n_clusters):
     from sklearn.metrics import silhouette_score
+    from sklearn.cluster import KMeans
     range_n_clusters = range_n_clusters
     silhouette_max = -1
-    optimum_cluster = range_n_clusters[1]
+    optimum_cluster = range_n_clusters[0]
     for n_clusters in range_n_clusters:
         kmeans = KMeans(n_clusters = n_clusters, random_state = 10, n_init = 10)
         cluster_labels = kmeans.fit_predict(data)

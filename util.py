@@ -215,14 +215,14 @@ def read_folder(folder, in_type = "html_chat"):
         files = []
     df = []
     for file in files:
-        file = join(folder, file)
+        file = folder + "/" + file
         #print(file)
-        if in_type == "html_chat" or in_type == "html_email" and isfile(file):
+        if isdir(file):
+            df.append(read_folder(file))
+        elif in_type == "html_chat" or in_type == "html_email" and isfile(file):
             temp = read_file(file, in_type)
             #print(type(temp))
             df.append(temp)
-        elif isdir(file):
-            df.append(read_folder(file))
     if len(df)!=0:
         df = concat(df, axis = 0, ignore_index = False)
         df = df.reset_index(drop = True)
@@ -402,8 +402,14 @@ def filter_data(data, message_col = 'messages'):
         max_conv1 = max_conv1[max_conv1['subset']==0]
         max_conv3 = max_conv.merge(max_conv1, on = columns, how = 'inner').reset_index(drop = True).drop(['subset'], axis = 1)
         max_conv4 = concat([max_conv2, max_conv3], axis = 0)
+        # cols = max_conv4.columns.tolist()
+        # cols[cols.index(message_col + '_x')] = message_col
+        # max_conv4.columns = cols
         return max_conv4
     else:
+        # cols = max_conv2.columns.tolist()
+        # cols[cols.index(message_col + '_x')] = message_col
+        # max_conv2.columns = cols
         return max_conv2
 
 def filter_senders(data, sender_col = "sender"):
@@ -456,11 +462,4 @@ def get_character_similarity(vocab, ratio_type = 'ratio'):
     del vocab.index.name
     vocab.columns = vocab.columns.droplevel()
     return vocab
-
-def label_data(data, index, cluster_labels):
-	if index is None:
-		data['cluster'] = cluster_labels
-	else:
-		data['cluster_' + index] = cluster_labels
-	return data
 
