@@ -142,7 +142,8 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             dic[keys[i]] = values[i]
         
         meta_data = [dic]
-        all_content = [sub(string = a.text, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in html.findAll("p", class_="MsoNormal") if a.text!='\xa0']
+        tex = [a.text for a in html.findAll("p", class_="MsoNormal") if a.text!='\xa0']
+        all_content = get_all_email_content(tex)
         all_fields = ["From: ", "Sent: ", "To: ", "Subject: "]
         all_fields_pattern = "|".join(all_fields)
         metadata_start_pattern = "^[\>]*[\ ]*From: "
@@ -171,6 +172,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
     else:
         text = open(file, 'r').read()
         return text
+
+def get_all_email_content(tex):
+    all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
+    return all_content
 
 def process_meta_data(meta_data_string, all_fields_pattern):
     from re import split, findall
@@ -451,3 +456,11 @@ def get_character_similarity(vocab, ratio_type = 'ratio'):
     del vocab.index.name
     vocab.columns = vocab.columns.droplevel()
     return vocab
+
+def label_data(data, index, cluster_labels):
+	if index is None:
+		data['cluster'] = cluster_labels
+	else:
+		data['cluster_' + index] = cluster_labels
+	return data
+
