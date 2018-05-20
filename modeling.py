@@ -9,6 +9,9 @@ Created on Thu Oct 12 20:17:17 2017
 # 1) Run word2vec on input text file
 # 2) Combine unigrams to make meaningful bigrams. Then combine to make trigrams
 
+# Purpose: To run word2vec model
+# Input: Text file path
+# Output: word2vec model object
 def run_word2vec_model(text_file):
     from gensim.models.word2vec import LineSentence, Word2Vec
     sentences = LineSentence(text_file)
@@ -18,6 +21,9 @@ def run_word2vec_model(text_file):
 #    model.save("sample_model.w2v.bin")
     return model
 
+# Purpose: Creates meaningful bigrams and trigrams from tokens
+# Input: List of tokens (unigrams)
+# Output: List (unigrams, bigrams (unigram_unigram) and trigrams(unigram_unigram_unigram))
 def apply_bigram_trigram_model(unigrams):
     from gensim.models.phrases import Phrases , Phraser
     phrases = Phrases(unigrams)
@@ -26,6 +32,9 @@ def apply_bigram_trigram_model(unigrams):
     trigram = Phraser(trigram)
     return list(trigram[bigram[unigrams]])
 
+# Purpose: Creates topics based on LDA model
+# Input: Input text file
+# Output: LDA model object
 def run_lda_topic_model(text_file):
     from gensim.models.ldamodel import LdaModel
     from gensim.corpora.textcorpus import TextCorpus
@@ -45,22 +54,28 @@ def run_lda_topic_model(text_file):
     lda = LdaModel(corpus = corpus, id2word = dictionary, passes=20)
     return lda
 
+# Purpose: Creates Logistic Regression classification model
+# Input: DataFrame of input columns and output column
+# Output: Logistic Regression model object
 def build_logistic_regression(df, outcome):
     from sklearn.linear_model import LogisticRegression
     model = LogisticRegression(penalty = 'l1')
     model.fit(X = df.drop(outcome, axis=1), y = df[outcome])
     return model
 
-## Purpose: Runs affinity propogation for clustering based on given m x m distance matrix
-## Input: m x m square matrix of distances
-## Output: Affinity propogation model object. aff.labels_ gives cluster labels
+# Purpose: Runs affinity propogation for clustering based on given m x m distance matrix
+# Input: m x m square matrix of distances
+# Output: Affinity propogation model object. aff.labels_ gives cluster labels
 def run_aff_prop_with_distances(distances):
     from sklearn.cluster import AffinityPropagation
     aff = AffinityPropagation(max_iter = 1000, affinity = 'precomputed')
     aff.fit(distances)
     return aff
 
-def run_kmeans(data, transforms = None, autoenc_cols = None, outfile_prefix = ""):
+# Purpose: Runs kmeans clustering
+# Input: DataFrame with required variables
+# Output: DataFrame with cluster ID in 'cluster' column
+def run_kmeans(data, outfile_prefix = ""):
     from sklearn.cluster import KMeans
     from pickle import dump
     from pandas import DataFrame
@@ -72,6 +87,9 @@ def run_kmeans(data, transforms = None, autoenc_cols = None, outfile_prefix = ""
     data['cluster'] = cluster_labels
     return data
 
+# Purpose: Silhouette criteria for automatic selection of number of clusters
+# Input: DataFrame and range of number of clusters
+# Output: Int (Optimal number of clusters)
 def optimal_k_silhouette(data, range_n_clusters):
     from sklearn.metrics import silhouette_score
     from sklearn.cluster import KMeans
