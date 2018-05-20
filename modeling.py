@@ -51,6 +51,9 @@ def build_logistic_regression(df, outcome):
     model.fit(X = df.drop(outcome, axis=1), y = df[outcome])
     return model
 
+## Purpose: Runs affinity propogation for clustering based on given m x m distance matrix
+## Input: m x m square matrix of distances
+## Output: Affinity propogation model object. aff.labels_ gives cluster labels
 def run_aff_prop_with_distances(distances):
     from sklearn.cluster import AffinityPropagation
     aff = AffinityPropagation(max_iter = 1000, affinity = 'precomputed')

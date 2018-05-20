@@ -31,11 +31,24 @@ NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 # 5) Check whether language is English with prabability > p (default = 0.5)
 # 6) Spell correct (in progress)
 
+# Purpose: To run TreeTagger and get the output in TreeTagger format for given text
+# Input: String
+# Output: List of Tags(word, pos, lemma)
 def run_treetagger(text):
     s = tagger.tag_text(text.lower())
     s = make_tags(s)
     return(s)
 
+# Purpose: To read a given FILE of given input type
+# Input: File name (path), type of file, message column name (for html_chat)
+# Output: Either of:
+# 1) csv: DataFrame with same columns as the original file
+# 2) excel: DataFrame with same columns as the original file
+# 3) html_chat: DataFrame with metadata columns and 'conversation' column with DataFrame of chat history
+# and 'messages' column with tuple of all messages in chat
+# 4) html_email: DataFrame with 'meta_data' of all emails (From, To, Date, etc.)
+# and 'conversation' containing the body of all emails
+# 5) If none of the above types, read it as a text file and return string
 def read_file(file, in_type = "csv", message_col = "Message"):
     if in_type.lower() == "csv":
         from pandas import read_csv
@@ -173,6 +186,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         text = open(file, 'r').read()
         return text
 
+
+# Purpose: To get the list of contents of email from a list of strings
+# Input: List of strings
+# Output: List of conversations
 def get_all_email_content(tex):
     all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
     return all_content
@@ -187,25 +204,37 @@ def process_meta_data(meta_data_string, all_fields_pattern):
     
     return dic
 
+# Purpose: To remove punctuations from a string
+# Input: String
+# Output: String
 def remove_punctuations_string(string):
     return sub(pattern = puncts1, repl = "", string = string)
 
+# Purpose: To convert >=2 spaces into 1 space in a string
+# Input: String
+# Output: String
 def remove_excess_spaces(string):
     return sub(pattern = " {2,}", repl = " ", string = string)
 
-def get_conversation(data):
-    length = len(data) - 1
-    conversation = data[length]
-    conversation.columns = conversation.iloc[0].tolist()
-    conversation = conversation.drop(0, axis=0)
-    conversation = conversation.reset_index(drop=True)  
-    return conversation
+# def get_conversation(data):
+#     length = len(data) - 1
+#     conversation = data[length]
+#     conversation.columns = conversation.iloc[0].tolist()
+#     conversation = conversation.drop(0, axis=0)
+#     conversation = conversation.reset_index(drop=True)  
+#     return conversation
 
+# Purpose: To remove redundant data points
+# Input: DataFrame with columns ["timestamp" (date), "sender", "recipients", "subject", ...]
+# Output: DataFrame with counts of unique ["timestamp" (date), "sender", "recipients", "subject"]
 def get_redundaunt_info(data):
     data = data[["timestamp", "sender", "recipients", "subject"]]
     data = data.apply(lambda x: " ".join(x), axis=1).value_counts()
     return data
 
+# Purpose: To recursively read different files in a folder (only 1 type of file per folder)
+# Input: Folder name
+# Output: DataFrame with all row-binded read_file results
 def read_folder(folder, in_type = "html_chat"):
     from os import listdir
     from os.path import join, isfile, isdir
@@ -231,31 +260,55 @@ def read_folder(folder, in_type = "html_chat"):
     return df
 
 
+# Purpose: To flatten list of list of ... into linear list
+# Input: List of list of ...
+# Output: List (flattened completely)
 def flatten_list_of_list(list_of_list):
     from itertools import chain
     return list(chain.from_iterable(list_of_list))
 
+# Purpose: To clean a list of sentences
+# Input: List of strings
+# Output: List of strings
 def clean_sentences(sentences):
     return [clean_strings(string) for string in sentences]
 
+# Purpose: To clean a sentence
+# Input: String
+# Output: String
 def clean_strings(string):
     return sub(pattern = "^(nan )*", repl = "", string = string)
 
+# Purpose: To pick the first language from output of language detection
+# Input: Languages (list of strings with probability)
+# Output: First language (string - highest probability)
 def pick_first_language(langs):
     if langs!=None:
         return langs[0]
     else:
         return langdetect.language.Language(lang = "NA", prob = 0)
 
+# Purpose: To choose English if probability > threshold
+# Input: List of languages
+# Output: Boolean (True / False)
 def is_english_wp_p(langs, p = 0.5):
     return langs.lang == "en" and langs.prob > p
 
+# Purpose: To compute list of tokens and lag 1 of tokens
+# Input: index and tokens
+# Output: tokens and lag1(tokens)
 def diffs(index, tokens):
     return [tokens[index], tokens[index+1]]
 
+# Purpose: To combine 2 words in a list
+# Input: List of 2 strings
+# Output: String
 def merge_words(words):
     return words[0] + words[1]
 
+# Purpose: To combine 2 words if both words are incorrctly spelled and combination is correct
+# Input: Tokens with spell check, combined words with spelling checked
+# Output: DataFrame of combined tokens
 def correct_tokens(tokens, wrong_corrected, combine_check):
     final_tokens = []
     i = 0
@@ -270,9 +323,15 @@ def correct_tokens(tokens, wrong_corrected, combine_check):
         i = i+1
     return DataFrame(final_tokens)[0]
 
+# Purpose: To convert string to lower case
+# Input: String
+# Output: String
 def lower(text):
     return text.lower()
 
+# Purpose: To check spelling of tags
+# Input: Tags
+# Output: Spelling corrected tags
 def check_spell(row):
     from spellcheck import SpellCheck
     spell_check = SpellCheck('/usr/share/dict/words')
@@ -283,9 +342,15 @@ def check_spell(row):
         ret = spell_check.correct(row[0])
         return ret
 
+# Purpose: To check whether word is in predefined set of words
+# Input: Word
+# Output: Boolean
 def is_in_words(word):
     return word in NLP_WORDS
 
+# Purpose: To combine 2 words if both words are incorrctly spelled and combination is correct
+# Input: POS DataFrame
+# Output: DataFrame of combined tokens
 def spell_correct_tokens(pos):
     # This only merges 2 consecutive words & checks if they are both incorrectly spelled
     from autocorrect import spell
@@ -318,9 +383,15 @@ def spell_correct_tokens(pos):
     except:
         return pos[0].tolist()
 
+# Purpose: To check whether row is None
+# Input: Row
+# Output: Boolean
 def is_not_none(row):
     return row!=None
 
+# Purpose: To check whether number is NaN
+# Input: Number
+# Output: Boolean
 def is_not_nan(num):
     try:
         return not(isnan(num))
@@ -333,11 +404,17 @@ def is_not_nan(num):
 #        return tokens
 #    except:
 #        return pos[0].tolist()
-#
+
+# Purpose: To process Tags that are not well formed tags
+# Input: Tag
+# Output: String
 def process_NotTag(not_tag):
     text = not_tag.split('"')
     return text[1]
 
+# Purpose: To detect language of a strong
+# Input: String
+# Output: List of languages
 def detect_language(text):
     from langdetect import detect_langs
     try:
@@ -345,14 +422,23 @@ def detect_language(text):
     except:
         return None
 
+# Purpose: To remove stop words
+# Input: List of tokens
+# Output: List (of words without stopwords)
 def remove_stopwords(tokens):
     tokens = [token for token in tokens if token not in english_stopwords]
     return tokens
 
+# Purpose: To remove punctuations
+# Input: List of tokens
+# Output: List (of words without punctuations)
 def remove_punctuations(tokens):
     tokens = [token for token in tokens if token not in puncts]
     return tokens
 
+# Purpose: To convert date string to date format
+# Input: Date string
+# Output: Date
 def process_date(date):
     date = date.replace(".", "").split(", ")[1]
     dt = parse(date)
@@ -368,6 +454,9 @@ def process_date(date):
     date = date + "/" + month + "/" + day
     return date
 
+# Purpose: To get conversation of max length
+# Input: DataFrame with conversation column
+# Output: Deduplicated conversation
 def get_maximal_conversation(data, columns):
     max_conv = data[columns].groupby(columns).count().reset_index()
     if 'index' in max_conv.columns:
@@ -378,6 +467,9 @@ def get_maximal_conversation(data, columns):
     
     return max_conv
 
+# Purpose: To deduplicate a DataFrame of conversation
+# Input: DataFrame with message column
+# Output: DataFrame (after removing duplicates)
 def filter_data(data, message_col = 'messages'):
     # Retaining only English
     data = data[data['language'] == "en"].reset_index(drop = True)
@@ -402,38 +494,50 @@ def filter_data(data, message_col = 'messages'):
         max_conv1 = max_conv1[max_conv1['subset']==0]
         max_conv3 = max_conv.merge(max_conv1, on = columns, how = 'inner').reset_index(drop = True).drop(['subset'], axis = 1)
         max_conv4 = concat([max_conv2, max_conv3], axis = 0)
-        # cols = max_conv4.columns.tolist()
-        # cols[cols.index(message_col + '_x')] = message_col
-        # max_conv4.columns = cols
         return max_conv4
     else:
-        # cols = max_conv2.columns.tolist()
-        # cols[cols.index(message_col + '_x')] = message_col
-        # max_conv2.columns = cols
         return max_conv2
 
+# Purpose: To filter conversations and remove conversations with sender like GG *
+# Input: DataFrame of conversations
+# Output: DataFrame (after filtering senders)
 def filter_senders(data, sender_col = "sender"):
     # Filtering senders with names like "GG *"
     results = data[sender_col].apply(findgg)
     data = data[results == 0]
     return data
 
+# Purpose: To check whether sender is of GG * format
+# Input: String of senders
+# Output: Length of GG * pattern
 def findgg(string):
     return len(findall("gg[\ ]*", string.lower()))
 
+# Purpose: To remove spurious recipients
+# Input: DataFrame of conversations
+# Output: DataFrame (after removing spurious recipients)
 def filter_recipients(data, recipients_col = "recipients"):
     results = data[recipients_col].apply(lambda x: len(x.split(";")))
     data = data[results <= 5]
     return data
 
+# Purpose: To search for a pattern in given string
+# Input: String and pattern
+# Output: Boolean
 def search_pattern(string, pattern):
     com = findall(pattern, string.lower())
     return len(com) > 0
 
+# Purpose: To search for patterns in given string
+# Input: String and pattern
+# Output: Boolean
 def search_patterns(string, patterns):
     results = patterns.apply(lambda x: search_pattern(x, string))
     return results
 
+# Purpose: To calculate semantic similarity of words in word2vec
+# Input: word2vec model
+# Output: m x m similarity matrix
 def get_semantic_similarity(word2vec_model):
     from sklearn.metrics.pairwise import cosine_similarity
     mat = word2vec_model[word2vec_model.wv.vocab]
@@ -442,6 +546,9 @@ def get_semantic_similarity(word2vec_model):
     sim.index = word2vec_model.wv.vocab
     return sim
 
+# Purpose: To calculate fuzzy similarity of words in vocab
+# Input: Vocabulary, type of fuzzy similarity
+# Output: m x m similarity matrix
 def get_character_similarity(vocab, ratio_type = 'ratio'):
     from fuzzywuzzy import fuzz
     vocab = DataFrame(vocab)
