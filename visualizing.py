@@ -8,6 +8,9 @@ Created on Sun Oct 15 16:55:54 2017
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
+# Purpose: Visualize a word2vec model
+# Input: Gensim word2vec model, color series
+# Output: matplotlive plot with color
 def visualize_word2vec_model(word2vec_model, color = None):
     X = word2vec_model[word2vec_model.wv.vocab]
     tsne = TSNE(n_components=2, random_state = 1)

@@ -21,6 +21,9 @@ dependency_parser = StanfordDependencyParser(path_to_jar = parser_jar,
 # 1) Stanford parser
 # 2) CoreNLP parser (not working - need to check if it is same as Stanford parser)
 
+# Purpose: Runs dependency parser on string
+# Input: String
+# Output: Parse tree
 def run_stanford_parser(text):
     result = dependency_parser.raw_parse(text)
     dep = result.__next__()

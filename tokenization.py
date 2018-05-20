@@ -32,6 +32,10 @@ from re import sub
 #    text = s.tokenize(text.lower())
 #    return text
 #
+
+# Purpose: Runs TreeTagger for tokenization
+# Input: String
+# Output: List (tokens)
 def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text)
     if get_lemma:
@@ -51,6 +55,10 @@ def tokenize_treetagger(text, get_lemma = False):
 #            lis.append(word.text)
 #    return lis
 #
+
+# Purpose: Identify and split sentences from a paragram
+# Input: String (paragraph)
+# Output: List of strings (sentences)
 def tokenize_sentence_nltk(text, get_lemma = False):
     text = sub(pattern = "\n", repl = ". ", string = text)
     text = sub(pattern = "\xa0", repl = " ", string = text)

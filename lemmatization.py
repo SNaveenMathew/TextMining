@@ -17,6 +17,9 @@ import treetaggerwrapper
 # 2) Wordnet
 # 3) spaCy (in progress)
 
+# Purpose: Lemmatizes a string
+# Input: Tag from run_treetagger
+# Output: String (corrected lemma)
 def lemmatize_treetagger(tag):
     length = len(tag)
     if length>1 and type(tag)==treetaggerwrapper.Tag:

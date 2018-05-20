@@ -29,6 +29,9 @@ from util import run_treetagger#, run_spacy
 #        text = pos_tagger.tag(tokens)
 #        return text
 
+# Purpose: Create POS tags using TreeTagger
+# Input: String, Boolean (lemma required or not)
+# Output: Tuple (string (lemma if required), POS)
 def run_treetagger_pos_tag_text(text, get_lemma = False):
     try:
         text = run_treetagger(text)
@@ -50,6 +53,10 @@ def run_treetagger_pos_tag_text(text, get_lemma = False):
 #            lis.append((word.text, word.tag_))
 #    return lis
 #
+
+# Purpose: Lemmatizes a list of strings
+# Input: List of strings
+# Output: List of run_treetagger_pos_tag_text (tuple)
 def run_treetagger_pos_tag_list(lis):
     ret = [run_treetagger_pos_tag_text(string) for string in lis]
     return ret
