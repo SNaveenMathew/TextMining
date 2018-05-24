@@ -52,7 +52,7 @@ def run_lda_topic_model(text_file):
     dictionary = dic.Dictionary(text)
     corpus = [dictionary.doc2bow(sent) for sent in text]
     lda = LdaModel(corpus = corpus, id2word = dictionary, passes=1)
-    return lda
+    return (lda, corpus, dictionary)
 
 # Purpose: Creates Logistic Regression classification model
 # Input: DataFrame of input columns and output column

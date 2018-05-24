@@ -571,7 +571,7 @@ def get_character_similarity(vocab, ratio_type = 'ratio'):
     vocab.columns = vocab.columns.droplevel()
     return vocab
 
-def lda_topics(word):
+def get_word_lda_topics(word):
     try:
         return (word, lda_model.get_term_topics(word))
     except:
