@@ -22,6 +22,7 @@ environ["TREETAGGER_HOME"] = treetagger_home
 tagger = TreeTagger(TAGLANG = 'en')
 puncts1 = "[" + puncts + "]"
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
+english_stopwords = set(stopwords.words('english'))
 
 # Other utilities:
 # 1) Read text file
@@ -216,13 +217,13 @@ def remove_punctuations_string(string):
 def remove_excess_spaces(string):
     return sub(pattern = " {2,}", repl = " ", string = string)
 
-# def get_conversation(data):
-#     length = len(data) - 1
-#     conversation = data[length]
-#     conversation.columns = conversation.iloc[0].tolist()
-#     conversation = conversation.drop(0, axis=0)
-#     conversation = conversation.reset_index(drop=True)  
-#     return conversation
+def get_conversation(data):
+    length = len(data) - 1
+    conversation = data[length]
+    conversation.columns = conversation.iloc[0].tolist()
+    conversation = conversation.drop(0, axis=0)
+    conversation = conversation.reset_index(drop=True)  
+    return conversation
 
 # Purpose: To remove redundant data points
 # Input: DataFrame with columns ["timestamp" (date), "sender", "recipients", "subject", ...]
@@ -570,3 +571,8 @@ def get_character_similarity(vocab, ratio_type = 'ratio'):
     vocab.columns = vocab.columns.droplevel()
     return vocab
 
+def lda_topics(word):
+    try:
+        return (word, lda_model.get_term_topics(word))
+    except:
+        return None
