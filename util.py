@@ -51,13 +51,14 @@ def run_treetagger(text):
 # and 'conversation' containing the body of all emails
 # 5) If none of the above types, read it as a text file and return string
 def read_file(file, in_type = "csv", message_col = "Message"):
-    if in_type.lower() == "csv":
+    in_type = in_type.lower()
+    if in_type == "csv":
         from pandas import read_csv
         return read_csv(file, encoding = "latin1")
-    elif in_type.lower() == "excel":
+    elif in_type == "excel":
         from pandas import read_excel
         return read_excel(file, encoding = "latin1")
-    elif in_type.lower() == "html_chat":
+    elif in_type == "html_chat":
         from pandas import read_html
         try:
             df = read_html(file)
@@ -140,7 +141,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         else:
             df = DataFrame()
         return df
-    elif in_type.lower() == "html_email":
+    elif in_type == "html_email":
         from bs4 import BeautifulSoup
         from pandas import read_html
         from dateparser import parse
@@ -162,13 +163,19 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         all_fields_pattern = "|".join(all_fields)
         metadata_start_pattern = "^[\>]*[\ ]*From: "
         metadata_stop_pattern = "Subject: "
-        contents, meta_data = get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
+        contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
         df = DataFrame({"meta_data": meta_data, "conversation": contents})
         return df
     elif in_type.lower() == "enron_email":
         try:
             all_content = open(file, 'r').readlines()
-            contents, meta_data = get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type)
+            all_fields = ["From: ", "Sent: ", "To: ", "Subject: ", "Message\-ID: ", "Date: ",
+            "Mime\-Version: ", "Content\-Type: ", "Content\-Transfer\-Encoding: ", "X\-From: ",
+            "X\-To: ", "X\-cc: ", "X\-bcc: ", "X\-Folder: ", "X\-Origin: ", "X\-FileName: ", "Subject:\t"]
+            all_fields_pattern = "|".join(all_fields)
+            metadata_start_pattern = "^[\>]*[\ ]*From: |^[\>]*[\ ]*Message\-ID: "
+            metadata_stop_pattern = "^[\>]*[\ ]*Subject:[\t]*[\ ]*|^[\>]*[\ ]*X\-FileName: "
+            contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type)
             df = DataFrame({"meta_data": meta_data, "conversation": contents})
         except:
             df = DataFrame()
@@ -185,7 +192,7 @@ def get_all_email_content(tex):
     all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
     return all_content
 
-def get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data = []):
+def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data = []):
     start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0]
     stop_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
     if in_type.lower() == "enron_email":
@@ -263,6 +270,7 @@ def get_redundaunt_info(data):
 def read_folder(folder, in_type = "html_chat"):
     from os import listdir
     from os.path import join, isfile, isdir
+    in_type = in_type.lower()
     try:
         files = listdir(folder)
     except:
@@ -273,7 +281,7 @@ def read_folder(folder, in_type = "html_chat"):
         #print(file)
         if isdir(file):
             df.append(read_folder(file))
-        elif in_type == "html_chat" or in_type == "html_email" and isfile(file):
+        elif in_type == "html_chat" or in_type == "html_email" or in_type == "enron_email" and isfile(file):
             temp = read_file(file, in_type)
             #print(type(temp))
             df.append(temp)
