@@ -168,6 +168,7 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         return df
     elif in_type.lower() == "enron_email":
         try:
+            meta_data = []
             all_content = open(file, 'r').readlines()
             all_fields = ["From: ", "Sent: ", "To: ", "Subject: ", "Message\-ID: ", "Date: ",
             "Mime\-Version: ", "Content\-Type: ", "Content\-Transfer\-Encoding: ", "X\-From: ",
@@ -175,7 +176,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             all_fields_pattern = "|".join(all_fields)
             metadata_start_pattern = "^[\>]*[\ ]*From: |^[\>]*[\ ]*Message\-ID: "
             metadata_stop_pattern = "^[\>]*[\ ]*Subject:[\t]*[\ ]*|^[\>]*[\ ]*X\-FileName: "
-            contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type)
+            contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
+            if(len(meta_data) != len(contents)):
+                print(file)
+                print(meta_data)
             df = DataFrame({"meta_data": meta_data, "conversation": contents})
         except:
             df = DataFrame()
@@ -192,7 +196,7 @@ def get_all_email_content(tex):
     all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
     return all_content
 
-def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data = []):
+def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data):
     start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0]
     stop_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
     if in_type.lower() == "enron_email":
@@ -278,12 +282,10 @@ def read_folder(folder, in_type = "html_chat"):
     df = []
     for file in files:
         file = folder + "/" + file
-        #print(file)
         if isdir(file):
             df.append(read_folder(file))
         elif in_type == "html_chat" or in_type == "html_email" or in_type == "enron_email" and isfile(file):
             temp = read_file(file, in_type)
-            #print(type(temp))
             df.append(temp)
     if len(df)!=0:
         df = concat(df, axis = 0, ignore_index = False)
