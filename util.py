@@ -162,26 +162,16 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         all_fields_pattern = "|".join(all_fields)
         metadata_start_pattern = "^[\>]*[\ ]*From: "
         metadata_stop_pattern = "Subject: "
-        start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0] + [len(all_content)]
-        stop_index = [-1] + [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
-        ranges = [(stop_index[i]+1, start_index[i]) for i, val in enumerate(start_index)]
-        contents = []
-        for rng in ranges:
-            string = "\n".join(all_content[rng[0]:rng[1]])
-            contents.append(string)
-        
-        start_index = start_index[:-1]
-        stop_index = stop_index[1:]
-        ranges = [(start_index[i], stop_index[i]+1) for i, val in enumerate(start_index)]
-        meta_d = []
-        for rng in ranges:
-            string = (". \n".join([a for a in all_content[rng[0]:rng[1]] if a!= ""])).strip()
-            meta_d.append(string)
-        
-        for meta in meta_d:
-            meta_data.append(process_meta_data(meta, all_fields_pattern))
-
+        contents, meta_data = get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
         df = DataFrame({"meta_data": meta_data, "conversation": contents})
+        return df
+    elif in_type.lower() == "enron_email":
+        try:
+            all_content = open(file, 'r').readlines()
+            contents, meta_data = get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type)
+            df = DataFrame({"meta_data": meta_data, "conversation": contents})
+        except:
+            df = DataFrame()
         return df
     else:
         text = open(file, 'r').read()
@@ -194,6 +184,40 @@ def read_file(file, in_type = "csv", message_col = "Message"):
 def get_all_email_content(tex):
     all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
     return all_content
+
+def get_contents_meta_data(all_content, all_fields, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data = []):
+    start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0]
+    stop_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
+    if in_type.lower() == "enron_email":
+        start_index = start_index[1:]
+        stop_index = stop_index[1:]
+    
+    start_index = start_index + [len(all_content)]
+    stop_index = [-1] + stop_index
+    ranges = [(stop_index[i]+1, start_index[i]) for i, val in enumerate(start_index)]
+    if in_type.lower() == "enron_email":
+        ranges = ranges[1:]
+    
+    contents = []
+    for rng in ranges:
+        string = "\n".join(all_content[rng[0]:rng[1]])
+        contents.append(string)
+    
+    start_index = start_index[:-1]
+    stop_index = stop_index[1:]
+    if in_type.lower() == "enron_email":
+        start_index[0] = 0
+    
+    ranges = [(start_index[i], stop_index[i]+1) for i, val in enumerate(start_index)]
+    meta_d = []
+    for rng in ranges:
+        string = (". \n".join([a for a in all_content[rng[0]:rng[1]] if a!= ""])).strip()
+        meta_d.append(string)
+    
+    for meta in meta_d:
+        meta_data.append(process_meta_data(meta, all_fields_pattern))
+    
+    return contents, meta_data
 
 def process_meta_data(meta_data_string, all_fields_pattern):
     from re import split, findall
