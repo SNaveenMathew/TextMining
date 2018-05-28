@@ -38,12 +38,21 @@ from re import sub
 # Output: List (tokens)
 def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text)
-    if get_lemma:
-        s = [lemmatize_treetagger(tag) for tag in s]
-        return s
-    else:
-        s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
-        return s
+    try:
+        try:
+            if get_lemma:
+                s = [lemmatize_treetagger(tag) for tag in s]
+                return s
+            else:
+                s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
+                return s
+        except:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(text, "html.parser")
+            sentences = tokenize_sentence_nltk(soup.contents.strip())
+            return [tokenize_treetagger(sentence, get_lemma = get_lemma) for sentence in sentences]
+    except:
+        return []
 
 #def tokenize_spacy(text, get_lemma = False):
 #    s = run_spacy(text)

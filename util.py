@@ -170,9 +170,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         try:
             meta_data = []
             all_content = open(file, 'r').readlines()
-            all_fields = ["From: ", "Sent: ", "To: ", "Subject: ", "Message\-ID: ", "Date: ",
-            "Mime\-Version: ", "Content\-Type: ", "Content\-Transfer\-Encoding: ", "X\-From: ",
-            "X\-To: ", "X\-cc: ", "X\-bcc: ", "X\-Folder: ", "X\-Origin: ", "X\-FileName: ", "Subject:\t"]
+            all_fields = ["From:[\ ]*\t*", "Sent:[\ ]*\t*", "To:[\ ]*\t*", "Subject:[\ ]*\t*", "Message\-ID:[\ ]*\t*",
+            "Date:[\ ]*\t*", "Mime\-Version:[\ ]*\t*", "Content\-Type:[\ ]*\t*", "Content\-Transfer\-Encoding:[\ ]*\t*",
+            "X\-From:[\ ]*\t*", "X\-To:[\ ]*\t*", "X\-cc:[\ ]*\t*", "X\-bcc:[\ ]*\t*", "X\-Folder:[\ ]*\t*",
+            "X\-Origin:[\ ]*\t*", "X\-FileName:[\ ]*\t*"]
             all_fields_pattern = "|".join(all_fields)
             metadata_start_pattern = "^[\>]*[\ ]*From: |^[\>]*[\ ]*Message\-ID: "
             metadata_stop_pattern = "^[\>]*[\ ]*Subject:[\t]*[\ ]*|^[\>]*[\ ]*X\-FileName: "
@@ -211,7 +212,7 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
     
     contents = []
     for rng in ranges:
-        string = "\n".join(all_content[rng[0]:rng[1]])
+        string = sub(string = "\n".join(all_content[rng[0]:rng[1]]), pattern = "[\-]*Original Message[\-]*", repl = "").strip()
         contents.append(string)
     
     start_index = start_index[:-1]
@@ -560,14 +561,14 @@ def filter_recipients(data, recipients_col = "recipients"):
 # Input: String and pattern
 # Output: Boolean
 def search_pattern(string, pattern):
-    com = findall(pattern, string.lower())
+    com = findall(pattern = pattern, string = string.lower())
     return len(com) > 0
 
 # Purpose: To search for patterns in given string
 # Input: String and pattern
 # Output: Boolean
 def search_patterns(string, patterns):
-    results = patterns.apply(lambda x: search_pattern(x, string))
+    results = patterns.apply(lambda x: search_pattern(pattern = x, string = string))
     return results
 
 # Purpose: To calculate semantic similarity of words in word2vec
@@ -610,3 +611,9 @@ def get_word_lda_topics(word):
         return (word, lda_model.get_term_topics(word))
     except:
         return None
+
+def join_tokens(tokens):
+    if(type(tokens[0]) == list):
+        return [" ".join(x) for x in tokens]
+    else:
+        return " ".join(tokens)
