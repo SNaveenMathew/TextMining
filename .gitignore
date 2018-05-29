@@ -17,3 +17,5 @@ pos_tagging_temp.py
 email/*
 Enron/*
 .vscode/*
+TextMining.egg-info
+dist
