@@ -312,7 +312,10 @@ def clean_sentences(sentences):
 # Input: String
 # Output: String
 def clean_strings(string):
-    return sub(pattern = "^(nan )*", repl = "", string = string)
+    if type(string) == list:
+        return ". ".join(clean_sentences(string))
+    else:
+        return sub(pattern = "^(nan )*", repl = "", string = string)
 
 # Purpose: To pick the first language from output of language detection
 # Input: Languages (list of strings with probability)
@@ -380,8 +383,8 @@ def check_spell(row):
 # Purpose: To check whether word is in predefined set of words
 # Input: Word
 # Output: Boolean
-def is_in_words(word):
-    return word in NLP_WORDS
+def is_spelled_correctly(word):
+    return word in NLP_WORDS or "_" in word # For phrases
 
 # Purpose: To combine 2 words if both words are incorrctly spelled and combination is correct
 # Input: POS DataFrame

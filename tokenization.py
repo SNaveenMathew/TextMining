@@ -36,15 +36,17 @@ from re import sub
 # Purpose: Runs TreeTagger for tokenization
 # Input: String
 # Output: List (tokens)
+
+strip_str = "\ -_[]()/+:,.?!=#$,;'\""
 def tokenize_treetagger(text, get_lemma = False):
-    s = run_treetagger(text)
+    s = run_treetagger(text.strip(strip_str))
     try:
         try:
             if get_lemma:
-                s = [lemmatize_treetagger(tag) for tag in s]
+                s = [lemmatize_treetagger(tag.strip(strip_str)) for tag in s]
                 return s
             else:
-                s = [tag[0] if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
+                s = [tag[0].strip(strip_str) if type(tag)!=treetaggerwrapper.NotTag else process_NotTag(tag[0]) for tag in s]
                 return s
         except:
             from bs4 import BeautifulSoup
