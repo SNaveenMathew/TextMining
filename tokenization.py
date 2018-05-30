@@ -37,7 +37,7 @@ from re import sub
 # Input: String
 # Output: List (tokens)
 
-strip_str = "\ -_[]()/+:,.?!=#$,;'\""
+strip_str = "\ -_[]()/+:,.?!=#$,;'\"<>@`~^%&*|{}"
 def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text.strip(strip_str))
     try:
