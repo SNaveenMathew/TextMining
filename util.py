@@ -9,7 +9,7 @@ from treetaggerwrapper import TreeTagger, make_tags
 from math import isnan
 #from en_core_web_md import load
 from os import environ
-from pandas import DataFrame, concat
+from pandas import DataFrame, concat, Series
 import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
@@ -144,7 +144,6 @@ def read_file(file, in_type = "csv", message_col = "Message"):
     elif in_type == "html_email":
         from bs4 import BeautifulSoup
         from pandas import read_html
-        from dateparser import parse
         html = BeautifulSoup(open(file, "rb").read(), "html.parser")
         all_fields = ["From ", "Date ", "To", "Cc", "Subject"]
         all_fields_pattern = "|".join(all_fields)
@@ -172,8 +171,8 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             all_content = open(file, 'r').readlines()
             all_fields = ["From:[\ ]*\t*", "Sent:[\ ]*\t*", "To:[\ ]*\t*", "Subject:[\ ]*\t*", "Message\-ID:[\ ]*\t*",
             "Date:[\ ]*\t*", "Mime\-Version:[\ ]*\t*", "Content\-Type:[\ ]*\t*", "Content\-Transfer\-Encoding:[\ ]*\t*",
-            "X\-From:[\ ]*\t*", "X\-To:[\ ]*\t*", "X\-cc:[\ ]*\t*", "X\-bcc:[\ ]*\t*", "X\-Folder:[\ ]*\t*",
-            "X\-Origin:[\ ]*\t*", "X\-FileName:[\ ]*\t*"]
+            "X\-From:[\ ]*\t*", "X\-To:[\ ]*\t*", "X\-[cC]c:[\ ]*\t*", "X\-[bB]cc:[\ ]*\t*", "X\-Folder:[\ ]*\t*",
+            "X\-Origin:[\ ]*\t*", "X\-FileName:[\ ]*\t*", "Cc:[\ ]*\t*"]
             all_fields_pattern = "|".join(all_fields)
             metadata_start_pattern = "^[\>]*[\ ]*From: |^[\>]*[\ ]*Message\-ID: "
             metadata_stop_pattern = "^[\>]*[\ ]*Subject:[\t]*[\ ]*|^[\>]*[\ ]*X\-FileName: "
@@ -233,8 +232,8 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
 
 def process_meta_data(meta_data_string, all_fields_pattern):
     from re import split, findall
-    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "") for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
-    vals = [st.strip() for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
+    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "").strip("\ \.\n\t") for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
+    vals = [st.strip().strip("\.\n\t\ ") for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
     dic = {}
     for i in range(len(vals)):
         dic[keys[i]] = vals[i]
@@ -489,6 +488,18 @@ def process_date(date):
     
     date = date + "/" + month + "/" + day
     return date
+
+def parse_date(date):
+    import datetime
+    try:
+        res = parse(date)
+        return res
+    except:
+        try:
+            res = parse(date.split("-")[0].strip())
+            return res
+        except:
+            return datetime.datetime(year = 1900, month = 1, day = 1)
 
 # Purpose: To get conversation of max length
 # Input: DataFrame with conversation column
