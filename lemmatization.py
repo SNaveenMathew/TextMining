@@ -22,11 +22,13 @@ import treetaggerwrapper
 # Output: String (corrected lemma)
 def lemmatize_treetagger(tag):
     length = len(tag)
-    if length>1 and type(tag)==treetaggerwrapper.Tag:
-        if tag[length-1]!="@card@":
+    if length>1 and type(tag) == treetaggerwrapper.Tag:
+        if tag[length-1] != "@card@":
             return tag[length-1]
         else:
             return tag[0]
+    elif type(tag) == treetaggerwrapper.NotTag:
+        return tag[0][0]
     elif type(tag)==list:
         lemma = []
         for t in tag:

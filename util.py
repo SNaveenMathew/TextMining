@@ -628,6 +628,27 @@ def get_word_lda_topics(word):
 
 def join_tokens(tokens):
     if(type(tokens[0]) == list):
-        return [" ".join(x) for x in tokens]
+        return [" ".join(x) for x in tokens if x != ""]
     else:
         return " ".join(tokens)
+
+def get_sentiment_with_highest_score(sentiment_tags):
+    vals = list(sentiment_tags.values())[:-1]
+    idx = vals.index(max(vals))
+    keys = list(sentiment_tags.keys())[:-1]
+    return keys[idx]
+
+def postprocess_sentences(sentence_list):
+    return clean_strings([sub(string = z, pattern = "[\ ]{2,}", repl = " ") for z in
+    [sub(string = y, pattern = "^[\ ]*[\.]*", repl = "") for y in
+    [sub(string = x, pattern = "[\ ]*[\.]*$", repl = ".") for x in sentence_list] if y != '']])
+
+def postprocess_tag(s, get_lemma = False):
+    import treetaggerwrapper
+    if type(s) == treetaggerwrapper.Tag:
+        if get_lemma:
+            return (str(s[2]), str(s[1]))
+        else:
+            return (str(s[0]), str(s[1]))
+    elif type(s) == treetaggerwrapper.NotTag:
+        return (str(s[0][0]), 'UNKNOWN')

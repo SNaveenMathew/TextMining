@@ -5,7 +5,7 @@ Created on Thu Oct 12 10:09:49 2017
 @author: naveen.nathan
 """
 
-from util import run_treetagger#, run_spacy
+from util import run_treetagger, postprocess_tag#, run_spacy
 #from nltk.tag import StanfordPOSTagger
 #from tokenization import tokenize_stanford
 # from nltk import pos_tag
@@ -34,12 +34,12 @@ from util import run_treetagger#, run_spacy
 # Output: Tuple (string (lemma if required), POS)
 def run_treetagger_pos_tag_text(text, get_lemma = False):
     try:
-        text = run_treetagger(text)
-        if get_lemma:
-            text = [(str(s[2]), str(s[1])) for s in text]
-        else:
-            text = [(str(s[0]), str(s[1])) for s in text]
-        return text
+        try:
+            text = run_treetagger(text)
+            text = [postprocess_tag(s) for s in text]
+            return text
+        except:
+            return text[0][0]
     except:
         return [('', '')]
 
