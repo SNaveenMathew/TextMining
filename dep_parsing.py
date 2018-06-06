@@ -6,13 +6,13 @@ Created on Thu Oct 12 16:38:06 2017
 """
 
 from nltk.parse.stanford import StanfordDependencyParser
+from json import load
 #from nltk.parse.corenlp import CoreNLPParser
 
 # Initializating global variables
-parser_cfg = open("parser.cfg").read()
-parser_cfg = parser_cfg.split("\n")
-parser_jar = parser_cfg[0]
-parser_models_jar = parser_cfg[1]
+parser_cfg = load(open("parser.cfg"))
+parser_jar = parser_cfg["parser.jar"]
+parser_models_jar = parser_cfg["models.jar"]
 dependency_parser = StanfordDependencyParser(path_to_jar = parser_jar,
                                                  path_to_models_jar = parser_models_jar)
 #parser = CoreNLPParser()

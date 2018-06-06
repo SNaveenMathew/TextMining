@@ -9,10 +9,10 @@ from util import run_treetagger, postprocess_tag#, run_spacy
 #from nltk.tag import StanfordPOSTagger
 #from tokenization import tokenize_stanford
 # from nltk import pos_tag
-#pos_cfg = open("pos_tagger.cfg").read()
-#pos_cfg = pos_cfg.split("\n")
-#model = pos_cfg[1]
-#jar = pos_cfg[0]
+# from json import load
+#pos_cfg = load(open("pos_tagger.cfg"))
+#model = pos_cfg["tagger"]
+#jar = pos_cfg["postagger.jar"]
 #pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
 
 # Available options:
