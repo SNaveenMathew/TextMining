@@ -315,7 +315,8 @@ def clean_strings(string):
     if type(string) == list:
         return ". ".join(clean_sentences(string))
     else:
-        return sub(pattern = "^(nan )*", repl = "", string = string)
+        string = sub(pattern = "^(nan )*", repl = "", string = string)
+        return string
 
 # Purpose: To pick the first language from output of language detection
 # Input: Languages (list of strings with probability)
@@ -620,7 +621,7 @@ def get_character_similarity(vocab, ratio_type = 'ratio'):
     vocab.columns = vocab.columns.droplevel()
     return vocab
 
-def get_word_lda_topics(word):
+def get_word_lda_topics(lda_model, word):
     try:
         return (word, lda_model.get_term_topics(word))
     except:
@@ -639,9 +640,7 @@ def get_sentiment_with_highest_score(sentiment_tags):
     return keys[idx]
 
 def postprocess_sentences(sentence_list):
-    return clean_strings([sub(string = z, pattern = "[\ ]{2,}", repl = " ") for z in
-    [sub(string = y, pattern = "^[\ ]*[\.]*", repl = "") for y in
-    [sub(string = x, pattern = "[\ ]*[\.]*$", repl = ".") for x in sentence_list] if y != '']])
+    return clean_strings([sub(string = sub(string = x, pattern = "[\ ]{2,}", repl = " "), pattern = "[\.]{1,}", repl = ".") for x in sentence_list])
 
 def postprocess_tag(s, get_lemma = False):
     import treetaggerwrapper

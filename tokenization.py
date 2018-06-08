@@ -10,7 +10,7 @@ from util import flatten_list_of_list, process_NotTag, run_treetagger
 from lemmatization import lemmatize_treetagger
 from nltk.tokenize import sent_tokenize
 import treetaggerwrapper
-from re import sub
+from re import sub, findall
 # from pyspark.ml.feature import Tokenizer
 
 # Initialization
@@ -37,7 +37,7 @@ from re import sub
 # Input: String
 # Output: List (tokens)
 
-strip_str = "\ -_[]()/+:,.?!=#$,;'\"<>@`~^%&*|{}"
+strip_str = "\ -_[]()+:=#$;'\"<>@`~^%&*|{}"
 def tokenize_treetagger(text, get_lemma = False):
     s = run_treetagger(text.strip(strip_str))
     try:
@@ -76,4 +76,6 @@ def tokenize_sentence_nltk(text, get_lemma = False):
     text = sent_tokenize(text)
     text = [sent.split("(.[A-Z])") for sent in text]
     text = flatten_list_of_list(text)
+    text = [sub(string = tex, pattern = "[\.\ ]*$", repl = " .") for tex in text]
+    text = [tex for tex in text if len(findall(string = tex, pattern = "^[\ \.]*$")) == 0 and tex != ""]
     return text

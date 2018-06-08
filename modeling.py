@@ -51,7 +51,7 @@ def run_lda_topic_model(text_file):
     text = text.apply(remove_punctuations)
     dictionary = dic.Dictionary(text)
     corpus = [dictionary.doc2bow(sent) for sent in text]
-    lda = LdaModel(corpus = corpus, id2word = dictionary, passes=1)
+    lda = LdaModel(corpus = corpus, id2word = dictionary, passes=5, random_state = 1)
     return (lda, corpus, dictionary)
 
 # Purpose: Creates Logistic Regression classification model
