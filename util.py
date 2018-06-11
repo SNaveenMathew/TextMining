@@ -9,7 +9,7 @@ from treetaggerwrapper import TreeTagger, make_tags
 from math import isnan
 #from en_core_web_md import load
 from os import environ
-from pandas import DataFrame, concat, Series
+from pandas import DataFrame, concat, Series, to_datetime
 import langdetect
 from autocorrect.nlp_parser import NLP_WORDS
 from nltk.corpus import stopwords
@@ -52,27 +52,34 @@ def run_treetagger(text):
 # 5) If none of the above types, read it as a text file and return string
 def read_file(file, in_type = "csv", message_col = "Message"):
     in_type = in_type.lower()
+    print(file)
     if in_type == "csv":
-        from pandas import read_csv
-        return read_csv(file, encoding = "latin1")
-    elif in_type == "excel":
-        from pandas import read_excel
-        return read_excel(file, encoding = "latin1")
-    elif in_type == "html_chat":
-        from pandas import read_html
         try:
-            df = read_html(file)
+            from pandas import read_csv
+            return read_csv(file, encoding = "latin1")
         except:
-            df = []
-        if type(df) == list and len(df) > 0:
-            
-            if len(df) == 6:
-                length = len(df)
+            return DataFrame()
+    elif in_type == "excel":
+        try:
+            from pandas import read_excel
+            return read_excel(file, encoding = "latin1")
+        except:
+            return DataFrame()
+    elif in_type == "html_chat":
+        try:
+            from pandas import read_html
+            try:
+                df = read_html(file)
+            except:
+                df = []
+            from numpy import array
+            length = len(df)
+            if length == 6:
                 conversation = []
                 language = "null"
                 num_of_conversation_turns = 0
-            elif len(df) == 7:
-                length = len(df)-1
+            elif length == 7:
+                length = length-1
                 conversation = get_conversation(df)
                 languages = conversation[message_col].apply(detect_language)
                 first_language = languages.apply(pick_first_language)
@@ -83,19 +90,15 @@ def read_file(file, in_type = "csv", message_col = "Message"):
                     language = first_language.apply(lambda x: x.lang).value_counts()
                     language = language.index[0]
                 num_of_conversation_turns = conversation.shape[0]
-                
-            
             meta_data = df[0:length]
             meta_data[1] = meta_data[1].T
             meta_data[2] = meta_data[2].T
-            import numpy as np
             if meta_data[1][0][0] == "No reviewing has been done":
-                d = np.array([["Date","null"],["Action Status","null"],["Reviewer","null"]])
+                d = array([["Date","null"],["Action Status","null"],["Reviewer","null"]])
                 meta_data[1] = DataFrame(data=d,columns=[0, 1])
             if meta_data[2][0][0] == "No comments have been left":
-                d = np.array([["Date","null"],["Comment","null"],["Reviewer","null"]])
+                d = array([["Date","null"],["Comment","null"],["Reviewer","null"]])
                 meta_data[2] = DataFrame(data=d,columns=[0, 1])
-                
             meta_data = meta_data[:-3] + meta_data[-2:]
             meta_data = concat(meta_data, axis = 0, ignore_index = True)
             timestamp = meta_data[2]
@@ -103,18 +106,15 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             timestamp = str(timestamp).lower()
             meta_data1 = meta_data[1]
             meta_data1.index = meta_data[0]
-            
             messageType = str(meta_data1['Message Type:']).lower()
             messageDirection = str(meta_data1['Message Direction:']).lower()
             case = str(meta_data1['Case:']).lower()
             captureDate = str(meta_data1['Capture Date:']).lower()
             itemId = str(meta_data1['Item ID:']).lower()
             policyAction = str(meta_data1['Policy Action:']).lower()
-          
             statusMarkDate = str(meta_data1['Date'].tolist()[0]).lower()
             status_reviewer = str(meta_data1['Reviewer'].tolist()[0]).lower()
             status = str(meta_data1['Action Status']).lower()
-
             commentDate = str(meta_data1['Date'].tolist()[1]).lower()
             comment = str(meta_data1['Comment']).lower()
             comment_reviewer = str(meta_data1['Reviewer'].tolist()[1]).lower()
@@ -129,7 +129,6 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             if is_not_nan(meta_data1["Cc"]):
                 recipients = recipients+ ";" + meta_data1["Cc"]
                 participants = participants + [meta_data1["Cc"]]
-
             participants.sort()
             participants = tuple(participants)
             subject = meta_data1["Subject"]
@@ -137,35 +136,37 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             messages = tuple(conversation[message_col].tolist())
             df = DataFrame([itemId, messageType, messageDirection, case, captureDate, policyAction, statusMarkDate, status, status_reviewer, commentDate, comment, comment_reviewer, participants, timestamp, language, sender, recipients, subject, conversation, num_of_conversation_turns, messages]).T
             df.columns = ["itemId", "messageType", "messageDirection", "case", "captureDate", "policyAction", "statusMarkDate", "status", "status_reviewer", "commentDate", "comment", "comment_reviewer", "participants", "timestamp", "language", "sender", "recipients", "subject", "conversation", "num_of_conversation_turns", "messages"]
-
-        else:
+        except:
             df = DataFrame()
         return df
     elif in_type == "html_email":
-        from bs4 import BeautifulSoup
-        from pandas import read_html
-        html = BeautifulSoup(open(file, "rb").read(), "html.parser")
-        all_fields = ["From ", "Date ", "To", "Cc", "Subject"]
-        all_fields_pattern = "|".join(all_fields)
-        readhtml = read_html(file)
-        dic = process_meta_data(" ".join(readhtml[0].T[0].tolist()), all_fields_pattern)
-        t1 = readhtml[1]
-        values = t1[1].tolist()
-        keys = t1[0]
-        for i in range(len(keys)):
-            dic[keys[i]] = values[i]
-        
-        meta_data = [dic]
-        tex = [a.text for a in html.findAll("p", class_="MsoNormal") if a.text!='\xa0']
-        all_content = get_all_email_content(tex)
-        all_fields = ["From: ", "Sent: ", "To: ", "Subject: "]
-        all_fields_pattern = "|".join(all_fields)
-        metadata_start_pattern = "^[\>]*[\ ]*From: "
-        metadata_stop_pattern = "Subject: "
-        contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
-        df = DataFrame({"meta_data": meta_data, "conversation": contents})
+        try:
+            from bs4 import BeautifulSoup
+            from pandas import read_html
+            html = BeautifulSoup(open(file, "rb").read(), "html.parser")
+            all_fields = ["From ", "Date ", "To", "Cc", "Subject"]
+            all_fields_pattern = "|".join(all_fields)
+            readhtml = read_html(file)
+            dic = process_meta_data(" ".join(readhtml[0].T[0].tolist()), all_fields_pattern)
+            t1 = readhtml[1]
+            values = t1[1].tolist()
+            keys = t1[0]
+            for i in range(len(keys)):
+                dic[keys[i]] = values[i]
+            
+            meta_data = [dic]
+            tex = [a.text for a in html.findAll("p", class_="MsoNormal") if a.text!='\xa0']
+            all_content = get_all_email_content(tex)
+            all_fields = ["From: ", "Sent: ", "To: ", "Subject: "]
+            all_fields_pattern = "|".join(all_fields)
+            metadata_start_pattern = "^[\>]*[\ ]*From: "
+            metadata_stop_pattern = "Subject: "
+            contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
+            df = DataFrame({"meta_data": meta_data, "conversation": contents})
+        except:
+            df = DataFrame()
         return df
-    elif in_type.lower() == "enron_email":
+    elif in_type == "enron_email":
         try:
             meta_data = []
             all_content = open(file, 'r').readlines()
@@ -185,7 +186,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             df = DataFrame()
         return df
     else:
-        text = open(file, 'r').read()
+        try:
+            text = open(file, 'r').read()
+        except:
+            text = ""
         return text
 
 
@@ -271,7 +275,7 @@ def get_redundaunt_info(data):
 # Purpose: To recursively read different files in a folder (only 1 type of file per folder)
 # Input: Folder name
 # Output: DataFrame with all row-binded read_file results
-def read_folder(folder, in_type = "html_chat"):
+def read_folder(folder, in_type):
     from os import listdir
     from os.path import join, isfile, isdir
     in_type = in_type.lower()
@@ -283,13 +287,18 @@ def read_folder(folder, in_type = "html_chat"):
     for file in files:
         file = folder + "/" + file
         if isdir(file):
-            df.append(read_folder(file))
+            df = df + [read_folder(file, in_type = in_type)]
         elif in_type == "html_chat" or in_type == "html_email" or in_type == "enron_email" and isfile(file):
-            temp = read_file(file, in_type)
-            df.append(temp)
-    if len(df)!=0:
+            try:
+                temp = read_file(file = file, in_type = in_type)
+                df.append(temp)
+            except:
+                pass
+    if len(df)!=0 and type(df) == list:
         df = concat(df, axis = 0, ignore_index = False)
         df = df.reset_index(drop = True)
+    elif type(df) == DataFrame:
+        return df
     else:
         df = DataFrame()
     return df
@@ -496,14 +505,20 @@ def process_date(date):
 def parse_date(date):
     import datetime
     try:
-        res = parse(date)
+        res = parse(date.split("-")[0].strip())
         return res
     except:
+        return datetime.datetime(year = 1900, month = 1, day = 1)
+
+def parse_date_fast(date):
+    try:
+        return to_datetime(date)
+    except:
         try:
-            res = parse(date.split("-")[0].strip())
+            res = to_datetime(date.split("-")[0].strip())
             return res
         except:
-            return datetime.datetime(year = 1900, month = 1, day = 1)
+            return parse_date(date)
 
 # Purpose: To get conversation of max length
 # Input: DataFrame with conversation column
@@ -651,3 +666,7 @@ def postprocess_tag(s, get_lemma = False):
             return (str(s[0]), str(s[1]))
     elif type(s) == treetaggerwrapper.NotTag:
         return (str(s[0][0]), 'UNKNOWN')
+
+def identify_num_lda_topics_with_hdp(corpus, id2word):
+    hdp_model = HdpModel(corpus = corpus, id2word = id2word)
+    return hdp_model.suggested_lda_model().num_topics

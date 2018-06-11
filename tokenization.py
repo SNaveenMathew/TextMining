@@ -51,7 +51,7 @@ def tokenize_treetagger(text, get_lemma = False):
         except:
             from bs4 import BeautifulSoup
             soup = BeautifulSoup(text, "html.parser")
-            sentences = tokenize_sentence_nltk(soup.contents.strip())
+            sentences = " . ".join([tokenize_sentence_nltk(x.strip()) for x in soup.contents])
             return [tokenize_treetagger(sentence, get_lemma = get_lemma) for sentence in sentences]
     except:
         return []

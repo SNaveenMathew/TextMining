@@ -35,12 +35,12 @@ def apply_bigram_trigram_model(unigrams):
 # Purpose: Creates topics based on LDA model
 # Input: Input text file
 # Output: LDA model object
-def run_lda_topic_model(text_file):
+def run_lda_topic_model(text_file, num_topics = None):
     from gensim.models.ldamodel import LdaModel
     from gensim.corpora.textcorpus import TextCorpus
     import gensim.corpora.dictionary as dic
     from tokenization import tokenize_treetagger
-    from util import remove_stopwords, remove_punctuations
+    from util import remove_stopwords, remove_punctuations, identify_num_lda_topics_with_hdp
     from pandas import Series
     corpus = TextCorpus(text_file)
     text = open(text_file, 'r').read()
@@ -51,7 +51,9 @@ def run_lda_topic_model(text_file):
     text = text.apply(remove_punctuations)
     dictionary = dic.Dictionary(text)
     corpus = [dictionary.doc2bow(sent) for sent in text]
-    lda = LdaModel(corpus = corpus, id2word = dictionary, passes=5, random_state = 1)
+    if num_topics is None:
+        num_topics = identify_num_lda_topics_with_hdp(corpus, dictionary)
+    lda = LdaModel(corpus = corpus, id2word = dictionary, passes=5, random_state = 1, num_topics = num_topics)
     return (lda, corpus, dictionary)
 
 # Purpose: Creates Logistic Regression classification model
