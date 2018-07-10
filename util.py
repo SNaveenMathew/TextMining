@@ -23,10 +23,6 @@ tagger = TreeTagger(TAGLANG = 'en')
 puncts1 = "[" + puncts + "]"
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 english_stopwords = set(stopwords.words('english'))
-all_fields = ["From:", "Sent:", "To:", "Subject:", "Message\-ID:",
-            "Date:", "Mime\-Version:", "Content\-Type:", "Content\-Transfer\-Encoding:",
-            "X\-From:", "X\-To:", "X\-[cC]c:", "X\-[bB]cc:", "X\-Folder:",
-            "X\-Origin:", "X\-FileName:", "Cc:"]
 
 # Other utilities:
 # 1) Read text file
@@ -178,10 +174,10 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             "[dD]ate:", "[mM]ime\-Version:", "[cC]ontent\-[tT]ype:", "[cC]ontent\-[tT]ransfer\-[eE]ncoding:",
             "[xX]\-[fF]rom:", "[xX]\-[tT]o:", "[xX]\-[cC]c:", "[xX]\-[bB]cc:", "[xX]\-[fF]older:",
             "[xX]\-[oO]rigin:", "[Xx]\-[fF]ileName:", "[cC]c:"]
-            all_fields = [field + "[\ \t]*" for field in all_fields]
+            all_fields = ["[\n\.\>]*" + field + "[\ \t]*" for field in all_fields]
             all_fields_pattern = "|".join(all_fields)
-            metadata_start_pattern = "^[\>]*[\ ]*[fF]rom: |^[\>]*[\ ]*[mM]essage\-[iI][dD]: "
-            metadata_stop_pattern = "^[\>]*[\ ]*[sS]ubject:[\t]*[\ ]*|^[\>]*[\ ]*[xX]\-[fF]ile[nN]ame: "
+            metadata_start_pattern = "^[\>]*[\ ]*[fF]rom:[\ \t]*|^[\>]*[\ ]*[mM]essage\-[iI][dD]:[\ \t]*"
+            metadata_stop_pattern = "^[\>]*[\ ]*[sS]ubject:[\t]*[\ ]*|^[\>]*[\ ]*[xX]\-[fF]ile[nN]ame:[\ \t]*"
             contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
             if(len(meta_data) != len(contents)):
                 print(file)
