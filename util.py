@@ -23,6 +23,10 @@ tagger = TreeTagger(TAGLANG = 'en')
 puncts1 = "[" + puncts + "]"
 NLP_WORDS = set([word.lower() for word in NLP_WORDS])
 english_stopwords = set(stopwords.words('english'))
+all_fields = ["From:", "Sent:", "To:", "Subject:", "Message\-ID:",
+            "Date:", "Mime\-Version:", "Content\-Type:", "Content\-Transfer\-Encoding:",
+            "X\-From:", "X\-To:", "X\-[cC]c:", "X\-[bB]cc:", "X\-Folder:",
+            "X\-Origin:", "X\-FileName:", "Cc:"]
 
 # Other utilities:
 # 1) Read text file
@@ -170,13 +174,14 @@ def read_file(file, in_type = "csv", message_col = "Message"):
         try:
             meta_data = []
             all_content = open(file, 'r').readlines()
-            all_fields = ["From:[\ ]*\t*", "Sent:[\ ]*\t*", "To:[\ ]*\t*", "Subject:[\ ]*\t*", "Message\-ID:[\ ]*\t*",
-            "Date:[\ ]*\t*", "Mime\-Version:[\ ]*\t*", "Content\-Type:[\ ]*\t*", "Content\-Transfer\-Encoding:[\ ]*\t*",
-            "X\-From:[\ ]*\t*", "X\-To:[\ ]*\t*", "X\-[cC]c:[\ ]*\t*", "X\-[bB]cc:[\ ]*\t*", "X\-Folder:[\ ]*\t*",
-            "X\-Origin:[\ ]*\t*", "X\-FileName:[\ ]*\t*", "Cc:[\ ]*\t*"]
+            all_fields = ["[Ff]rom:", "[Ss]ent[\ bBy]*:", "[Tt]o:", "[Ss]ubject:", "[mM]essage\-ID:",
+            "[dD]ate:", "[mM]ime\-Version:", "[cC]ontent\-[tT]ype:", "[cC]ontent\-[tT]ransfer\-[eE]ncoding:",
+            "[xX]\-[fF]rom:", "[xX]\-[tT]o:", "[xX]\-[cC]c:", "[xX]\-[bB]cc:", "[xX]\-[fF]older:",
+            "[xX]\-[oO]rigin:", "[Xx]\-[fF]ileName:", "[cC]c:"]
+            all_fields = [field + "[\ \t]*" for field in all_fields]
             all_fields_pattern = "|".join(all_fields)
-            metadata_start_pattern = "^[\>]*[\ ]*From: |^[\>]*[\ ]*Message\-ID: "
-            metadata_stop_pattern = "^[\>]*[\ ]*Subject:[\t]*[\ ]*|^[\>]*[\ ]*X\-FileName: "
+            metadata_start_pattern = "^[\>]*[\ ]*[fF]rom: |^[\>]*[\ ]*[mM]essage\-[iI][dD]: "
+            metadata_stop_pattern = "^[\>]*[\ ]*[sS]ubject:[\t]*[\ ]*|^[\>]*[\ ]*[xX]\-[fF]ile[nN]ame: "
             contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
             if(len(meta_data) != len(contents)):
                 print(file)
@@ -236,7 +241,7 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
 
 def process_meta_data(meta_data_string, all_fields_pattern):
     from re import split, findall
-    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "").strip("\ \.\n\t") for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
+    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "").strip("\ \.\n\t").lower() for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
     vals = [st.strip().strip("\.\n\t\ ") for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
     dic = {}
     for i in range(len(vals)):
@@ -302,6 +307,17 @@ def read_folder(folder, in_type):
     else:
         df = DataFrame()
     return df
+
+
+def process_from_for_date(from_string):
+    try:
+        try:
+            splits = from_string.split(" on ")
+            return splits[0], parse_date(splits[1])
+        except:
+            return splits[0], None
+    except:
+        return None, None
 
 
 # Purpose: To flatten list of list of ... into linear list
@@ -508,7 +524,7 @@ def parse_date(date):
         res = parse(date.split("-")[0].strip())
         return res
     except:
-        return datetime.datetime(year = 1900, month = 1, day = 1)
+        return None
 
 def parse_date_fast(date):
     try:
