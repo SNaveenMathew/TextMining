@@ -71,7 +71,8 @@ def tokenize_treetagger(text, get_lemma = False):
 # Input: String (paragraph)
 # Output: List of strings (sentences)
 def tokenize_sentence_nltk(text, get_lemma = False):
-    text = sub(pattern = "\n", repl = ". ", string = text)
+    text = sub(pattern = "\n|(\.[\ ]{1,}){1,}", repl = ". ", string = text)
+    text = sub(pattern = "\.{1,}", repl = ".", string = text)
     text = sub(pattern = "\xa0", repl = " ", string = text)
     text = sent_tokenize(text)
     text = [sent.split("(.[A-Z])") for sent in text]

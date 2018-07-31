@@ -173,11 +173,11 @@ def read_file(file, in_type = "csv", message_col = "Message"):
             all_fields = ["[Ff]rom:", "[Ss]ent[\ bBy]*:", "[Tt]o:", "[Ss]ubject:", "[mM]essage\-ID:",
             "[dD]ate:", "[mM]ime\-Version:", "[cC]ontent\-[tT]ype:", "[cC]ontent\-[tT]ransfer\-[eE]ncoding:",
             "[xX]\-[fF]rom:", "[xX]\-[tT]o:", "[xX]\-[cC]c:", "[xX]\-[bB]cc:", "[xX]\-[fF]older:",
-            "[xX]\-[oO]rigin:", "[Xx]\-[fF]ileName:", "[cC]c:"]
-            all_fields = ["[\n\.\>]*" + field + "[\ \t]*" for field in all_fields]
+            "[xX]\-[oO]rigin:", "[Xx]\-[fF]ileName:", "[cC][Cc]:"]
+            metadata_start_pattern = "^[\>\ ]*[fF]rom:[\ \t]*|^[\>\ ]*[mM]essage\-[iI][dD]:[\ \t]*|^[\>\ \-]*[fF]orwarded by[\ \t]*"
+            metadata_stop_pattern = "^[\>\ ]*[sS]ubject:[\t\ ]*|^[\>\ ]*[xX]\-[fF]ile[nN]ame:[\ \t]*"
+            all_fields = ["[\>]*[^A-Za-z0-9]{1,}[\>]*" + field + "[\ \t]*" for field in all_fields]
             all_fields_pattern = "|".join(all_fields)
-            metadata_start_pattern = "^[\>]*[\ ]*[fF]rom:[\ \t]*|^[\>]*[\ ]*[mM]essage\-[iI][dD]:[\ \t]*"
-            metadata_stop_pattern = "^[\>]*[\ ]*[sS]ubject:[\t]*[\ ]*|^[\>]*[\ ]*[xX]\-[fF]ile[nN]ame:[\ \t]*"
             contents, meta_data = get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data)
             if(len(meta_data) != len(contents)):
                 print(file)
@@ -201,6 +201,20 @@ def get_all_email_content(tex):
     all_content = [sub(string = a, pattern = "[\-]*Original Message[\-]*", repl = "").strip() for a in tex]
     return all_content
 
+def get_contents(all_content, ranges):
+    contents = []
+    for rng in ranges:
+        string = sub(string = "\n".join(all_content[rng[0]:rng[1]]), pattern = "[\-]*Original Message[\-]*", repl = "").strip()
+        contents.append(string)
+    return contents
+
+def get_meta_d_string(all_content, ranges):
+    meta_d = []
+    for rng in ranges:
+        string = (". \n".join([a for a in all_content[rng[0]:rng[1]] if a!= ""])).strip()
+        meta_d.append(string)
+    return meta_d
+
 def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_pattern, metadata_stop_pattern, in_type, meta_data):
     start_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_start_pattern))>0]
     stop_index = [i for i, content in enumerate(all_content) if len(findall(string = content, pattern = metadata_stop_pattern))>0]
@@ -214,10 +228,7 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
     if in_type.lower() == "enron_email":
         ranges = ranges[1:]
     
-    contents = []
-    for rng in ranges:
-        string = sub(string = "\n".join(all_content[rng[0]:rng[1]]), pattern = "[\-]*Original Message[\-]*", repl = "").strip()
-        contents.append(string)
+    contents = get_contents(all_content, ranges)
     
     start_index = start_index[:-1]
     stop_index = stop_index[1:]
@@ -225,10 +236,7 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
         start_index[0] = 0
     
     ranges = [(start_index[i], stop_index[i]+1) for i, val in enumerate(start_index)]
-    meta_d = []
-    for rng in ranges:
-        string = (". \n".join([a for a in all_content[rng[0]:rng[1]] if a!= ""])).strip()
-        meta_d.append(string)
+    meta_d = get_meta_d_string(all_content, ranges)
     
     for meta in meta_d:
         meta_data.append(process_meta_data(meta, all_fields_pattern))
@@ -237,8 +245,8 @@ def get_contents_meta_data(all_content, all_fields_pattern, metadata_start_patte
 
 def process_meta_data(meta_data_string, all_fields_pattern):
     from re import split, findall
-    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "").strip("\ \.\n\t").lower() for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
-    vals = [st.strip().strip("\.\n\t\ ") for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
+    keys = [sub(string = st, pattern = "[^A-Za-z0-9]", repl = "").strip("\ \.\n\t><").lower() for st in findall(string = meta_data_string, pattern = all_fields_pattern)]
+    vals = [st.strip().strip("\.\n\t\ \"'><") for st in split(string = meta_data_string, pattern = all_fields_pattern)[1:]]
     dic = {}
     for i in range(len(vals)):
         dic[keys[i]] = vals[i]
@@ -306,10 +314,15 @@ def read_folder(folder, in_type):
 
 
 def process_from_for_date(from_string):
+    from re import split
     try:
         try:
-            splits = from_string.split(" on ")
-            return splits[0], parse_date(splits[1])
+            splits = split(string = from_string, pattern = " on |[\ \t]{1,}")
+            if len(splits) == 2:
+                print(splits[0], splits[1])
+                return splits[0], parse_date(splits[1])
+            else:
+                return splits[0], None
         except:
             return splits[0], None
     except:
@@ -328,6 +341,13 @@ def flatten_list_of_list(list_of_list):
 # Output: List of strings
 def clean_sentences(sentences):
     return [clean_strings(string) for string in sentences]
+
+def not_empty(x):
+    results = findall(string = x, pattern = "[\>\.\ ]{1,}")
+    if len(results) > 0:
+        return all([y != x for y in results])
+    else:
+        return False
 
 # Purpose: To clean a sentence
 # Input: String
