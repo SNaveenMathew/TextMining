@@ -16,6 +16,7 @@ from nltk.corpus import stopwords
 from string import punctuation as puncts
 from re import findall, sub, compile
 from dateparser import parse
+from gensim.models import HdpModel
 
 treetagger_home = open('treetagger.cfg').read()
 environ["TREETAGGER_HOME"] = treetagger_home
